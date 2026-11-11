@@ -167,7 +167,8 @@ test('storage guarda y recupera torneo activo, historial, respaldo JSON y resume
 
   const text = formatShareableSummary(tournament, standings);
   assert.match(text, /Domingo Pickleball/);
-  assert.match(text, /#1: Pareja 1 11 - 7 Pareja 2/);
+  assert.match(text, /1\. Pareja 1 — 1 ganado, 0 perdidos/);
+  assert.match(text, /4\. Pareja 2 — 0 ganados, 1 perdido/);
 
   const afterDelete = deleteHistoryEntry('torneo-1', storage);
   assert.equal(afterDelete.length, 0);

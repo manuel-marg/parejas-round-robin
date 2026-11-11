@@ -1,47 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { formatShareableSummary } from '../domain/storage.js';
 
 /**
- * Vista de estadísticas, promedios y tabla de posiciones adaptable a móvil y escritorio.
+ * Vista directa de tabla de posiciones y botón para compartir resultados por WhatsApp.
  */
-export default function StatsView({ tournament, standings, summary, onSaveToHistory }) {
-  const [copied, setCopied] = useState(false);
-  const [savedHistory, setSavedHistory] = useState(false);
-
-  const hasPlayed = summary.completedMatches > 0;
+export default function StatsView({ tournament, standings, summary }) {
   const hasTies = standings.some((row) => row.tied > 0);
-
-  async function handleCopySummary() {
-    const text = formatShareableSummary(tournament, standings);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    } catch {
-      window.prompt('Copia el resumen del torneo:', text);
-    }
-  }
-
-  function handleSaveHistoryClick() {
-    onSaveToHistory();
-    setSavedHistory(true);
-    setTimeout(() => setSavedHistory(false), 2200);
-  }
-
-  function handleDownloadJson() {
-    const payload = JSON.stringify(tournament, null, 2);
-    const blob = new Blob([payload], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const safeName = (tournament.title || 'torneo-pickleball')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/gi, '-')
-      .replace(/^-|-$/g, '');
-    link.href = url;
-    link.download = `${safeName || 'torneo'}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
+  const shareText = formatShareableSummary(tournament, standings);
+  const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   return (
     <div>
@@ -56,73 +22,20 @@ export default function StatsView({ tournament, standings, summary, onSaveToHist
                 {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%)
               </p>
             </div>
-            <div className="stats-actions-row">
-              <button type="button" className="btn btn-soft btn-sm" onClick={handleCopySummary}>
-                {copied ? '¡Resumen copiado!' : 'Copiar resumen'}
-              </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleSaveHistoryClick}>
-                {savedHistory ? 'Guardado en historial' : 'Guardar historial'}
-              </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={handleDownloadJson}>
-                Exportar JSON
-              </button>
-            </div>
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-whatsapp btn-sm"
+            >
+              Compartir resultados por WhatsApp
+            </a>
           </div>
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${summary.progressPct}%` }} />
           </div>
         </div>
       </section>
-
-      <div className="kpi-grid">
-        <div className="kpi-card">
-          <div className="kpi-label">Quién ganó más</div>
-          <div className="kpi-value">
-            {hasPlayed ? summary.topWinners.map((r) => r.name).join(', ') : 'Sin partidos aún'}
-          </div>
-          <div className="kpi-detail">
-            {hasPlayed
-              ? `${summary.topWinners[0].won} victoria(s) · ${summary.topWinners[0].winRate.toFixed(0)}% éxito`
-              : 'Registra puntajes para calcular'}
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Quién ganó menos</div>
-          <div className="kpi-value">
-            {hasPlayed ? summary.lowestWinners.map((r) => r.name).join(', ') : 'Sin partidos aún'}
-          </div>
-          <div className="kpi-detail">
-            {hasPlayed
-              ? `${summary.lowestWinners[0].won} victoria(s) · ${summary.lowestWinners[0].winRate.toFixed(0)}% éxito`
-              : 'Registra puntajes para calcular'}
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Mejor promedio de puntos</div>
-          <div className="kpi-value">
-            {summary.bestAttack ? summary.bestAttack.name : 'Sin partidos aún'}
-          </div>
-          <div className="kpi-detail">
-            {summary.bestAttack
-              ? `${summary.bestAttack.avgPointsFor.toFixed(1)} pts/juego (${summary.bestAttack.pointsFor} PF)`
-              : 'Promedio de puntos a favor'}
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Mejor diferencia de puntos</div>
-          <div className="kpi-value">
-            {summary.bestDiff ? summary.bestDiff.name : 'Sin partidos aún'}
-          </div>
-          <div className="kpi-detail">
-            {summary.bestDiff
-              ? `${summary.bestDiff.pointDiff > 0 ? `+${summary.bestDiff.pointDiff}` : summary.bestDiff.pointDiff} pts acumulados`
-              : 'Diferencial PF - PC'}
-          </div>
-        </div>
-      </div>
 
       <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>

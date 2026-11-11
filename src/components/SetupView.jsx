@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 
-const SAMPLE_PRESETS = {
-  4: ['Pareja 1 (Ana / Luis)', 'Pareja 2 (Carlos / Sofía)', 'Pareja 3 (Mateo / Elena)', 'Pareja 4 (Diego / Valeria)'],
-  5: ['Ana / Luis', 'Carlos / Sofía', 'Mateo / Elena', 'Diego / Valeria', 'Jorge / Paula'],
-  6: ['Ana / Luis', 'Carlos / Sofía', 'Mateo / Elena', 'Diego / Valeria', 'Jorge / Paula', 'Raúl / Carmen'],
-};
-
 /**
- * Pantalla inicial para registrar parejas, elegir canchas y generar el calendario.
+ * Pantalla inicial para agregar parejas manualmente, configurar el torneo y generar juegos.
  */
-export default function SetupView({ onStartTournament, history, onLoadHistory, onImportJson }) {
+export default function SetupView({ onStartTournament, history, onLoadHistory }) {
   const [title, setTitle] = useState('Jornada de Pickleball');
-  const [pairs, setPairs] = useState(() =>
-    SAMPLE_PRESETS[4].map((name, i) => ({ id: `p-${i + 1}`, name }))
-  );
+  const [pairs, setPairs] = useState([]);
   const [newPairName, setNewPairName] = useState('');
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkText, setBulkText] = useState('');
@@ -40,17 +32,15 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
       .map((line) => line.trim())
       .filter(Boolean);
     if (lines.length < 2) {
-      setError('Escribe al menos 2 parejas (una por línea) para importar la lista.');
+      setError('Escribe al menos 2 parejas (una por línea) para agregar la lista.');
       return;
     }
-    setPairs(lines.map((name, idx) => ({ id: `p-${Date.now()}-${idx + 1}`, name })));
+    setPairs((prev) => [
+      ...prev,
+      ...lines.map((name, idx) => ({ id: `p-${Date.now()}-${prev.length + idx + 1}`, name })),
+    ]);
     setBulkMode(false);
     setBulkText('');
-    setError('');
-  }
-
-  function handleLoadPreset(count) {
-    setPairs(SAMPLE_PRESETS[count].map((name, idx) => ({ id: `p-${Date.now()}-${idx + 1}`, name })));
     setError('');
   }
 
@@ -81,37 +71,18 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
     });
   }
 
-  function handleFileImport(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        onImportJson(String(reader.result || ''));
-        setError('');
-      } catch (err) {
-        setError(err.message || 'No se pudo leer el archivo JSON.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  }
-
   return (
     <div className="setup-grid">
       <section className="card">
         <div className="setup-header-row">
           <div>
             <h2 className="card-title">1. Registrar parejas</h2>
-            <p className="card-subtitle">Agrega los nombres de todas las parejas participantes.</p>
+            <p className="card-subtitle">Agrega manualmente los nombres de cada pareja.</p>
           </div>
           <div className="preset-actions">
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBulkMode((v) => !v)}>
               {bulkMode ? 'Modo individual' : 'Pegar lista rápida'}
             </button>
-            <button type="button" className="btn btn-soft btn-sm" onClick={() => handleLoadPreset(4)}>4 parejas</button>
-            <button type="button" className="btn btn-soft btn-sm" onClick={() => handleLoadPreset(5)}>5 parejas</button>
-            <button type="button" className="btn btn-soft btn-sm" onClick={() => handleLoadPreset(6)}>6 parejas</button>
           </div>
         </div>
 
@@ -121,14 +92,14 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
             <textarea
               id="bulk-pairs"
               className="textarea"
-              rows={6}
+              rows={5}
               placeholder={'Ana / Luis\nCarlos / Sofía\nMateo / Elena\nDiego / Valeria'}
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
             />
             <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
               <button type="button" className="btn btn-primary btn-sm" onClick={handleApplyBulk}>
-                Usar esta lista
+                Agregar lista
               </button>
               <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBulkMode(false)}>
                 Cancelar
@@ -178,7 +149,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
               ))}
               {pairs.length === 0 && (
                 <p className="card-subtitle" style={{ padding: '12px 0' }}>
-                  No hay parejas todavía. Agrega al menos 2 parejas para empezar.
+                  No hay parejas todavía. Escribe una arriba y pulsa Agregar (mínimo 2 parejas).
                 </p>
               )}
             </div>
@@ -273,13 +244,6 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
           >
             Generar juegos automáticamente
           </button>
-
-          <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center' }}>
-            <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-              Importar respaldo (.json)
-              <input id="import-json-setup" name="importJsonSetup" type="file" accept="application/json,.json" hidden onChange={handleFileImport} />
-            </label>
-          </div>
         </section>
 
         {history.length > 0 && (

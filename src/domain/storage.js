@@ -118,32 +118,21 @@ export function parseImportedTournament(rawText) {
 }
 
 /**
- * Formatea la tabla de posiciones y resultados en texto limpio para compartir por WhatsApp.
+ * Formatea la tabla de posiciones en una lista precisa lista para enviar por WhatsApp.
  */
 export function formatShareableSummary(tournament, standings) {
   const title = tournament?.title?.trim() || 'Torneo Round-Robin';
   const lines = [`*${title}*`, ''];
-  lines.push('🏆 *Posiciones:*');
+
   standings.forEach((row) => {
-    const sign = row.pointDiff > 0 ? `+${row.pointDiff}` : `${row.pointDiff}`;
-    lines.push(
-      `${row.rank}. ${row.name} — ${row.won}G/${row.lost}P (${row.winRate.toFixed(0)}%) | Dif ${sign} | Prom ${row.avgPointsFor.toFixed(1)} pts`
-    );
+    const wonLabel = row.won === 1 ? '1 ganado' : `${row.won} ganados`;
+    const lostLabel = row.lost === 1 ? '1 perdido' : `${row.lost} perdidos`;
+    const tiedPart =
+      row.tied > 0
+        ? `, ${row.tied === 1 ? '1 empatado' : `${row.tied} empatados`}`
+        : '';
+    lines.push(`${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart}`);
   });
-
-  const pairMap = new Map((tournament?.pairs || []).map((p) => [p.id, p.name]));
-  const played = (tournament?.matches || []).filter(
-    (m) => typeof m.scoreA === 'number' && typeof m.scoreB === 'number'
-  );
-
-  if (played.length > 0) {
-    lines.push('', '🎾 *Marcadores:*');
-    played.forEach((m) => {
-      const nameA = pairMap.get(m.pairAId) || m.pairAId;
-      const nameB = pairMap.get(m.pairBId) || m.pairBId;
-      lines.push(`#${m.gameNumber}: ${nameA} ${m.scoreA} - ${m.scoreB} ${nameB}`);
-    });
-  }
 
   return lines.join('\n');
 }

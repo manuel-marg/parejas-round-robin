@@ -3,7 +3,8 @@ import { isMatchCompleted } from '../domain/stats.js';
 import MatchCard from './MatchCard.jsx';
 
 /**
- * Vista principal de juegos: resalta el próximo turno/descanso y permite llenar puntajes.
+ * Vista principal de juegos: resalta el próximo turno/descanso, permite llenar puntajes
+ * y habilita acceso directo a estadísticas finales al completar todos los partidos.
  */
 export default function MatchesView({ tournament, onScoreChange, onClearMatch, onGoToStats }) {
   const [filter, setFilter] = useState('all');
@@ -19,6 +20,7 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
     [tournament.matches]
   );
   const completedCount = tournament.matches.length - pendingMatches.length;
+  const allCompleted = tournament.matches.length > 0 && pendingMatches.length === 0;
 
   const nextSlotMatches = useMemo(() => {
     if (pendingMatches.length === 0) return [];
@@ -145,6 +147,27 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
             />
           ))}
         </div>
+      )}
+
+      {allCompleted && (
+        <section className="bottom-stats-cta">
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
+              ¡Listo! Ya llenaste todos los juegos
+            </div>
+            <div style={{ fontSize: '0.86rem', color: 'var(--text-muted)' }}>
+              Consulta la tabla final de posiciones y compártela por WhatsApp.
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: '100%', maxWidth: '300px' }}
+            onClick={onGoToStats}
+          >
+            Ver estadísticas finales
+          </button>
+        </section>
       )}
     </div>
   );

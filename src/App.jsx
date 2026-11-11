@@ -5,7 +5,6 @@ import {
   deleteHistoryEntry,
   loadActiveTournament,
   loadTournamentHistory,
-  parseImportedTournament,
   saveActiveTournament,
   saveTournamentToHistory,
 } from './domain/storage.js';
@@ -15,7 +14,7 @@ import StatsView from './components/StatsView.jsx';
 import HistoryView from './components/HistoryView.jsx';
 
 /**
- * Componente raíz de la aplicación Pickleball Round-Robin con persistencia en localStorage.
+ * Componente raíz de la aplicación Pickleball Round-Robin.
  */
 export default function App() {
   const [tournament, setTournament] = useState(() => loadActiveTournament());
@@ -25,6 +24,12 @@ export default function App() {
   useEffect(() => {
     saveActiveTournament(tournament);
   }, [tournament]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [activeTab]);
 
   const standings = useMemo(() => {
     if (!tournament) return [];
@@ -120,12 +125,6 @@ export default function App() {
     setHistory(next);
   }
 
-  function handleImportJson(rawText) {
-    const imported = parseImportedTournament(rawText);
-    setTournament(imported);
-    setActiveTab('matches');
-  }
-
   function handleNewTournamentPrompt() {
     if (window.confirm('¿Volver a la configuración para crear un torneo nuevo?')) {
       setTournament(null);
@@ -148,14 +147,8 @@ export default function App() {
             </p>
           </div>
 
-          <div className="header-actions">
-            <div className="storage-pill" title="Los datos se guardan automáticamente en localStorage">
-              <span className="storage-dot" aria-hidden="true" />
-              <span>
-                Local<span className="storage-label-full"> (localStorage)</span>
-              </span>
-            </div>
-            {tournament && (
+          {tournament && (
+            <div className="header-actions">
               <button
                 type="button"
                 className="btn btn-header-ghost"
@@ -163,8 +156,8 @@ export default function App() {
               >
                 + Nuevo
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -174,7 +167,6 @@ export default function App() {
             onStartTournament={handleStartTournament}
             history={history}
             onLoadHistory={handleLoadHistory}
-            onImportJson={handleImportJson}
           />
         ) : (
           <>
@@ -241,7 +233,6 @@ export default function App() {
                 tournament={tournament}
                 standings={standings}
                 summary={summary}
-                onSaveToHistory={handleSaveToHistory}
               />
             )}
 
@@ -254,7 +245,6 @@ export default function App() {
                 onDeleteHistory={handleDeleteHistory}
                 onResetScores={handleResetScores}
                 onNewTournament={() => setTournament(null)}
-                onImportJson={handleImportJson}
               />
             )}
           </>

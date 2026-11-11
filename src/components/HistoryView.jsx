@@ -2,7 +2,7 @@ import React from 'react';
 import { isMatchCompleted } from '../domain/stats.js';
 
 /**
- * Vista de gestión local: historial guardado en localStorage, reinicio e importación JSON.
+ * Vista de gestión del torneo e historial guardado en este navegador.
  */
 export default function HistoryView({
   tournament,
@@ -12,29 +12,13 @@ export default function HistoryView({
   onDeleteHistory,
   onResetScores,
   onNewTournament,
-  onImportJson,
 }) {
-  function handleFileImport(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        onImportJson(String(reader.result || ''));
-      } catch (err) {
-        window.alert(err.message || 'Archivo JSON inválido.');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <section className="card">
         <h2 className="card-title">Acciones del torneo actual</h2>
         <p className="card-subtitle">
-          Todos los cambios se guardan automáticamente en el navegador (localStorage).
+          Administra los puntajes o guarda este torneo en el historial del dispositivo.
         </p>
 
         <div className="history-actions-grid">
@@ -67,14 +51,10 @@ export default function HistoryView({
           >
             Nuevo torneo / Cambiar parejas
           </button>
-          <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
-            Importar respaldo (.json)
-            <input id="import-json-history" name="importJsonHistory" type="file" accept="application/json,.json" hidden onChange={handleFileImport} />
-          </label>
         </div>
 
         <div style={{ marginTop: '14px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <strong>Datos técnicos del calendario actual:</strong> {tournament.pairs.length} parejas ·{' '}
+          <strong>Resumen del calendario:</strong> {tournament.pairs.length} parejas ·{' '}
           {tournament.matches.length} partidos · {tournament.courts} cancha(s) ·{' '}
           {tournament.meta?.backToBackTransitions === 0
             ? '0 partidos seguidos (descanso ideal garantizado)'
@@ -83,9 +63,9 @@ export default function HistoryView({
       </section>
 
       <section className="card">
-        <h3 className="card-title">Historial guardado en este navegador ({history.length})</h3>
+        <h3 className="card-title">Historial guardado ({history.length})</h3>
         <p className="card-subtitle">
-          Nota: los datos viven en este dispositivo/navegador. Usa "Exportar JSON" si quieres compartir o respaldar fuera.
+          Torneos guardados en este dispositivo.
         </p>
 
         {history.length === 0 ? (
