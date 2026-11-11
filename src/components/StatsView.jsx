@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { formatShareableSummary } from '../domain/storage.js';
 
 /**
- * Vista de estadísticas, promedios y tabla de posiciones en vivo o al final del torneo.
+ * Vista de estadísticas, promedios y tabla de posiciones adaptable a móvil y escritorio.
  */
 export default function StatsView({ tournament, standings, summary, onSaveToHistory }) {
   const [copied, setCopied] = useState(false);
@@ -18,7 +18,6 @@ export default function StatsView({ tournament, standings, summary, onSaveToHist
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      // Respaldo si el navegador bloquea clipboard API
       window.prompt('Copia el resumen del torneo:', text);
     }
   }
@@ -46,30 +45,32 @@ export default function StatsView({ tournament, standings, summary, onSaveToHist
 
   return (
     <div>
-      <section className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          <div>
-            <h2 className="card-title">
-              {summary.isFinished ? 'Estadísticas finales del torneo' : 'Estadísticas en progreso'}
-            </h2>
-            <p className="card-subtitle">
-              {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%)
-            </p>
+      <section className="card" style={{ marginBottom: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+            <div>
+              <h2 className="card-title">
+                {summary.isFinished ? 'Estadísticas finales del torneo' : 'Estadísticas en progreso'}
+              </h2>
+              <p className="card-subtitle">
+                {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%)
+              </p>
+            </div>
+            <div className="stats-actions-row">
+              <button type="button" className="btn btn-soft btn-sm" onClick={handleCopySummary}>
+                {copied ? '¡Resumen copiado!' : 'Copiar resumen'}
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleSaveHistoryClick}>
+                {savedHistory ? 'Guardado en historial' : 'Guardar historial'}
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleDownloadJson}>
+                Exportar JSON
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            <button type="button" className="btn btn-soft btn-sm" onClick={handleCopySummary}>
-              {copied ? '¡Resumen copiado!' : 'Copiar resumen'}
-            </button>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={handleSaveHistoryClick}>
-              {savedHistory ? 'Guardado en historial' : 'Guardar en historial'}
-            </button>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={handleDownloadJson}>
-              Exportar JSON
-            </button>
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width: `${summary.progressPct}%` }} />
           </div>
-        </div>
-        <div className="progress-track" style={{ marginTop: '12px' }}>
-          <div className="progress-fill" style={{ width: `${summary.progressPct}%` }} />
         </div>
       </section>
 
@@ -124,14 +125,62 @@ export default function StatsView({ tournament, standings, summary, onSaveToHist
       </div>
 
       <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
           <h3 className="card-title">Tabla general de posiciones</h3>
           <p className="card-subtitle">
-            Ordenada por victorias (PG), porcentaje de victorias (% Vic), diferencial (Dif) y puntos a favor (PF).
+            Ordenada por victorias (PG), % victorias, diferencial (Dif) y puntos a favor (PF).
           </p>
         </div>
 
-        <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+        <div className="standings-mobile-list">
+          {standings.map((row) => {
+            const diffLabel = row.pointDiff > 0 ? `+${row.pointDiff}` : `${row.pointDiff}`;
+            return (
+              <div
+                key={row.pairId}
+                className={`standing-mobile-card ${row.rank === 1 && row.played > 0 ? 'top-row' : ''}`}
+              >
+                <div className="standing-mobile-header">
+                  <div className="standing-mobile-title">
+                    <span className="standing-rank-pill">{row.rank}</span>
+                    <span style={{ overflowWrap: 'anywhere' }}>{row.name}</span>
+                  </div>
+                  <span className={`badge ${row.rank === 1 && row.played > 0 ? 'badge-success' : 'badge-primary'}`}>
+                    {row.played > 0 ? `${row.winRate.toFixed(0)}% vic` : '0 juegos'}
+                  </span>
+                </div>
+
+                <div className="standing-mobile-metrics">
+                  <div className="metric-cell">
+                    <div className="metric-cell-label">G - P</div>
+                    <div className="metric-cell-value" style={{ color: 'var(--primary)' }}>
+                      {row.won}-{row.lost}
+                      {hasTies && row.tied > 0 ? `-${row.tied}` : ''}
+                    </div>
+                  </div>
+                  <div className="metric-cell">
+                    <div className="metric-cell-label">PF / PC</div>
+                    <div className="metric-cell-value">
+                      {row.pointsFor}/{row.pointsAgainst}
+                    </div>
+                  </div>
+                  <div className="metric-cell">
+                    <div className="metric-cell-label">Dif</div>
+                    <div className="metric-cell-value">{diffLabel}</div>
+                  </div>
+                  <div className="metric-cell">
+                    <div className="metric-cell-label">Prom</div>
+                    <div className="metric-cell-value">
+                      {row.played > 0 ? row.avgPointsFor.toFixed(1) : '—'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="table-wrap standings-desktop-table" style={{ border: 'none', borderRadius: 0 }}>
           <table className="stats-table">
             <thead>
               <tr>

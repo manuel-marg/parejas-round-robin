@@ -100,12 +100,12 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
   return (
     <div className="setup-grid">
       <section className="card">
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
+        <div className="setup-header-row">
           <div>
             <h2 className="card-title">1. Registrar parejas</h2>
             <p className="card-subtitle">Agrega los nombres de todas las parejas participantes.</p>
           </div>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <div className="preset-actions">
             <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBulkMode((v) => !v)}>
               {bulkMode ? 'Modo individual' : 'Pegar lista rápida'}
             </button>
@@ -137,7 +137,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory, o
           </div>
         ) : (
           <>
-            <form onSubmit={handleAddPair} style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+            <form onSubmit={handleAddPair} className="add-pair-form">
               <input
                 id="new-pair-name"
                 name="newPairName"

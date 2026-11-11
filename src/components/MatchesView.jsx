@@ -114,8 +114,7 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
         <select
           id="pair-filter"
           name="pairFilter"
-          className="select"
-          style={{ width: 'auto', minWidth: '200px', padding: '7px 12px' }}
+          className="select pair-filter-select"
           aria-label="Filtrar por pareja"
           value={pairFilter}
           onChange={(e) => setPairFilter(e.target.value)}

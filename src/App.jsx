@@ -126,24 +126,44 @@ export default function App() {
     setActiveTab('matches');
   }
 
+  function handleNewTournamentPrompt() {
+    if (window.confirm('¿Volver a la configuración para crear un torneo nuevo?')) {
+      setTournament(null);
+    }
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="header-inner">
-          <div>
+          <div style={{ minWidth: 0 }}>
             <h1 className="brand-title">
               <span>🎾</span>
               <span>{tournament ? tournament.title : 'Pickleball Round-Robin'}</span>
             </h1>
             <p className="brand-subtitle">
               {tournament
-                ? `${tournament.pairs.length} parejas · ${summary.completedMatches}/${summary.totalMatches} juegos completados · A ${tournament.targetPoints || 11} pts`
-                : 'Todos contra todos por parejas con control de descansos y estadísticas'}
+                ? `${tournament.pairs.length} parejas · ${summary.completedMatches}/${summary.totalMatches} juegos · A ${tournament.targetPoints || 11} pts`
+                : 'Todos contra todos por parejas con descansos y estadísticas'}
             </p>
           </div>
-          <div className="storage-pill" title="Los datos se guardan automáticamente en localStorage">
-            <span className="storage-dot" aria-hidden="true" />
-            <span>Guardado en localStorage</span>
+
+          <div className="header-actions">
+            <div className="storage-pill" title="Los datos se guardan automáticamente en localStorage">
+              <span className="storage-dot" aria-hidden="true" />
+              <span>
+                Local<span className="storage-label-full"> (localStorage)</span>
+              </span>
+            </div>
+            {tournament && (
+              <button
+                type="button"
+                className="btn btn-header-ghost"
+                onClick={handleNewTournamentPrompt}
+              >
+                + Nuevo
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -201,15 +221,7 @@ export default function App() {
               <button
                 type="button"
                 className="btn btn-secondary btn-sm"
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      '¿Volver a la configuración para crear un torneo nuevo?'
-                    )
-                  ) {
-                    setTournament(null);
-                  }
-                }}
+                onClick={handleNewTournamentPrompt}
               >
                 + Nuevo torneo
               </button>
@@ -248,6 +260,35 @@ export default function App() {
           </>
         )}
       </main>
+
+      {tournament && (
+        <nav className="mobile-bottom-nav" aria-label="Navegación móvil del torneo">
+          <button
+            type="button"
+            className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
+            onClick={() => setActiveTab('matches')}
+          >
+            <span className="mobile-nav-icon" aria-hidden="true">🎾</span>
+            <span>Juegos ({summary.completedMatches}/{summary.totalMatches})</span>
+          </button>
+          <button
+            type="button"
+            className={`mobile-nav-btn ${activeTab === 'stats' ? 'active' : ''}`}
+            onClick={() => setActiveTab('stats')}
+          >
+            <span className="mobile-nav-icon" aria-hidden="true">📊</span>
+            <span>Estadísticas</span>
+          </button>
+          <button
+            type="button"
+            className={`mobile-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            <span className="mobile-nav-icon" aria-hidden="true">🗂️</span>
+            <span>Historial</span>
+          </button>
+        </nav>
+      )}
     </div>
   );
 }

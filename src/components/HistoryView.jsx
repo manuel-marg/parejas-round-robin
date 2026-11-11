@@ -37,7 +37,7 @@ export default function HistoryView({
           Todos los cambios se guardan automáticamente en el navegador (localStorage).
         </p>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '14px' }}>
+        <div className="history-actions-grid">
           <button type="button" className="btn btn-primary" onClick={onSaveToHistory}>
             Guardar copia en historial
           </button>
