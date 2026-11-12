@@ -549,14 +549,18 @@ input[type='number'] {
 }
 
 .gender-pill {
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
-  font-size: 0.78rem;
-  font-weight: 800;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+}
+
+.gender-pill .material-symbols-outlined {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .gender-pill-m,

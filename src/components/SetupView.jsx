@@ -154,7 +154,9 @@ export default function SetupView({
           <div id="tour-add-women" className="gender-box">
             <div className="gender-box-header">
               <span className="gender-title">
-                <span className="gender-pill gender-pill-m">M</span>
+                <span className="gender-pill gender-pill-m" aria-hidden="true">
+                  <span className="material-symbols-outlined">female</span>
+                </span>
                 Mujeres
               </span>
               <span className="badge badge-neutral">{women.length} registradas</span>
@@ -210,7 +212,9 @@ export default function SetupView({
           <div id="tour-add-men" className="gender-box">
             <div className="gender-box-header">
               <span className="gender-title">
-                <span className="gender-pill gender-pill-h">H</span>
+                <span className="gender-pill gender-pill-h" aria-hidden="true">
+                  <span className="material-symbols-outlined">male</span>
+                </span>
                 Hombres
               </span>
               <span className="badge badge-neutral">{men.length} registrados</span>
