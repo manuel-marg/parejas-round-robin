@@ -183,7 +183,7 @@ export function parseImportedTournament(rawText) {
  * Formatea la tabla de posiciones en una lista precisa lista para enviar por WhatsApp.
  */
 export function formatShareableSummary(tournament, standings) {
-  const title = tournament?.title?.trim() || 'Torneo Round-Robin';
+  const title = tournament?.title?.trim() || 'Torneo de Pickleball';
   const lines = [`*${title}*`, ''];
 
   standings.forEach((row) => {

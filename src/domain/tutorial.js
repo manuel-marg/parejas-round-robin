@@ -43,7 +43,7 @@ export function startSetupTutorial({ onComplete } = {}) {
   const steps = [
     {
       popover: {
-        title: '🎾 Cómo crear tu torneo',
+        title: 'Cómo crear tu torneo',
         description:
           'Te mostramos paso a paso qué llenar en esta pantalla para registrar las parejas y empezar a jugar.',
       },

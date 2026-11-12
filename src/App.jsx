@@ -20,7 +20,7 @@ import StatsView from './components/StatsView.jsx';
 import HistoryView from './components/HistoryView.jsx';
 
 /**
- * Componente raíz de la aplicación Pickleball Round-Robin.
+ * Componente raíz de la aplicación Pickleball.
  */
 export default function App() {
   const [tournament, setTournament] = useState(() => loadActiveTournament());
@@ -152,8 +152,10 @@ export default function App() {
         <div className="header-inner">
           <div style={{ minWidth: 0 }}>
             <h1 className="brand-title">
-              <span>🎾</span>
-              <span>{tournament ? tournament.title : 'Pickleball Round-Robin'}</span>
+              <span className="material-symbols-outlined brand-icon" aria-hidden="true">
+                pickleball
+              </span>
+              <span>{tournament ? tournament.title : 'Pickleball'}</span>
             </h1>
             <p className="brand-subtitle">
               {tournament
@@ -175,7 +177,10 @@ export default function App() {
                   }
                 }}
               >
-                ? Guía
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
+                  help
+                </span>
+                <span>Guía</span>
               </button>
             )}
             {tournament && (
@@ -295,7 +300,9 @@ export default function App() {
             className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
             onClick={() => setActiveTab('matches')}
           >
-            <span className="mobile-nav-icon" aria-hidden="true">🎾</span>
+            <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
+              pickleball
+            </span>
             <span>Juegos ({summary.completedMatches}/{summary.totalMatches})</span>
           </button>
           <button
@@ -304,7 +311,9 @@ export default function App() {
             className={`mobile-nav-btn ${activeTab === 'stats' ? 'active' : ''}`}
             onClick={() => setActiveTab('stats')}
           >
-            <span className="mobile-nav-icon" aria-hidden="true">📊</span>
+            <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
+              leaderboard
+            </span>
             <span>Estadísticas</span>
           </button>
           <button
@@ -312,7 +321,9 @@ export default function App() {
             className={`mobile-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
-            <span className="mobile-nav-icon" aria-hidden="true">🗂️</span>
+            <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
+              history
+            </span>
             <span>Historial</span>
           </button>
         </nav>

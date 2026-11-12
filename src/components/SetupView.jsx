@@ -108,7 +108,7 @@ export default function SetupView({
 
     setError('');
     onStartTournament({
-      title: title.trim() || 'Torneo Round-Robin',
+      title: title.trim() || 'Torneo de Pickleball',
       pairs: validPairs,
       courts: effectiveCourts,
       targetPoints,
