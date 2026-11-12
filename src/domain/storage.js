@@ -228,7 +228,7 @@ export function shouldAutoStartSetupTour(tutorialState) {
 export function shouldAutoStartMatchesTour(tutorialState) {
   if (tutorialState?.tournamentCompleted) return false;
   if (tutorialState?.matchesTourSeen) return false;
-  return isHelpActiveForToday(tutorialState) || !tutorialState?.helpRequestedDate;
+  return isHelpActiveForToday(tutorialState);
 }
 
 export function shouldAutoStartStatsTour(tutorialState) {

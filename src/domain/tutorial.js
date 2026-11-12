@@ -22,13 +22,25 @@ const BASE_DRIVER_CONFIG = {
 };
 
 function runTour(steps, onComplete) {
+  let finished = false;
+  const finish = (reason) => {
+    if (finished) return;
+    finished = true;
+    try {
+      onComplete?.(reason);
+    } catch (err) {
+      console.error('Error in tour onComplete:', err);
+    }
+  };
+
   const driverObj = driver({
     ...BASE_DRIVER_CONFIG,
     steps,
+    onDestroyStarted: (_element, _step, opts) => {
+      finish(opts?.reason);
+    },
     onDestroyed: (_element, _step, opts) => {
-      if (opts?.reason !== 'api' && opts?.reason !== 'replaced') {
-        onComplete?.(opts?.reason);
-      }
+      finish(opts?.reason);
     },
   });
 

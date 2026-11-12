@@ -28,34 +28,23 @@ export default function SetupView({
   onTourCompleteRef.current = onSetupTourComplete;
 
   useEffect(() => {
-    if (!autoStartTour) return undefined;
+    if (manualTourTick === 0 && !autoStartTour) {
+      return undefined;
+    }
+    const delay = manualTourTick > 0 ? 80 : 300;
     const timer = window.setTimeout(() => {
+      driverRef.current?.destroy();
       driverRef.current = startSetupTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
-    }, 300);
+    }, delay);
 
     return () => {
       window.clearTimeout(timer);
       driverRef.current?.destroy();
       driverRef.current = null;
     };
-  }, [autoStartTour]);
-
-  useEffect(() => {
-    if (manualTourTick === 0) return undefined;
-    const timer = window.setTimeout(() => {
-      driverRef.current = startSetupTutorial({
-        onComplete: () => onTourCompleteRef.current?.(),
-      });
-    }, 80);
-
-    return () => {
-      window.clearTimeout(timer);
-      driverRef.current?.destroy();
-      driverRef.current = null;
-    };
-  }, [manualTourTick]);
+  }, [autoStartTour, manualTourTick]);
 
   const canComputeSchedule = women.length >= 2 && men.length >= 2;
   const totalMatches = canComputeSchedule

@@ -24,34 +24,23 @@ export default function HistoryView({
   const menCount = tournament.players.filter((p) => p.gender === 'H').length;
 
   useEffect(() => {
-    if (!autoStartTour) return undefined;
+    if (manualTourTick === 0 && !autoStartTour) {
+      return undefined;
+    }
+    const delay = manualTourTick > 0 ? 80 : 300;
     const timer = window.setTimeout(() => {
+      driverRef.current?.destroy();
       driverRef.current = startHistoryTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
-    }, 300);
+    }, delay);
 
     return () => {
       window.clearTimeout(timer);
       driverRef.current?.destroy();
       driverRef.current = null;
     };
-  }, [autoStartTour]);
-
-  useEffect(() => {
-    if (manualTourTick === 0) return undefined;
-    const timer = window.setTimeout(() => {
-      driverRef.current = startHistoryTutorial({
-        onComplete: () => onTourCompleteRef.current?.(),
-      });
-    }, 80);
-
-    return () => {
-      window.clearTimeout(timer);
-      driverRef.current?.destroy();
-      driverRef.current = null;
-    };
-  }, [manualTourTick]);
+  }, [autoStartTour, manualTourTick]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

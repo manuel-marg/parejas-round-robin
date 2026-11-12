@@ -322,12 +322,18 @@ test('tutorialState controla primera visita y desactiva autoarranque al completa
   assert.equal(initial.matchesTourSeen, false);
   assert.equal(initial.tournamentCompleted, false);
   assert.equal(shouldAutoStartSetupTour(initial), true);
-  assert.equal(shouldAutoStartMatchesTour(initial), true);
+  // Matches, Stats e History no arrancan solos a menos que el usuario solicite ayuda
+  assert.equal(shouldAutoStartMatchesTour(initial), false);
+  assert.equal(shouldAutoStartStatsTour(initial), false);
+  assert.equal(shouldAutoStartHistoryTour(initial), false);
 
   const afterSetup = markSetupTourSeen(storage);
   assert.equal(afterSetup.setupTourSeen, true);
   assert.equal(shouldAutoStartSetupTour(afterSetup), false);
-  assert.equal(shouldAutoStartMatchesTour(afterSetup), true);
+
+  // Al solicitar ayuda, se activa el recorrido para las vistas no vistas
+  const activated = activateHelpSession(storage);
+  assert.equal(shouldAutoStartMatchesTour(activated), true);
 
   const afterMatches = markMatchesTourSeen(storage);
   assert.equal(afterMatches.matchesTourSeen, true);

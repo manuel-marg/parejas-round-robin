@@ -52,36 +52,27 @@ export default function MatchesView({
   const allCompleted = totalMatches > 0 && pendingMatches.length === 0;
 
   useEffect(() => {
-    if (!autoStartTour || allCompleted) return undefined;
+    if (manualTourTick === 0 && (!autoStartTour || allCompleted)) {
+      return undefined;
+    }
+    if (manualTourTick > 0) {
+      setFilter('all');
+      setPlayerFilter('all');
+    }
+    const delay = manualTourTick > 0 ? 80 : 300;
     const timer = window.setTimeout(() => {
+      driverRef.current?.destroy();
       driverRef.current = startMatchesTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
-    }, 300);
+    }, delay);
 
     return () => {
       window.clearTimeout(timer);
       driverRef.current?.destroy();
       driverRef.current = null;
     };
-  }, [autoStartTour, allCompleted]);
-
-  useEffect(() => {
-    if (manualTourTick === 0) return undefined;
-    setFilter('all');
-    setPlayerFilter('all');
-    const timer = window.setTimeout(() => {
-      driverRef.current = startMatchesTutorial({
-        onComplete: () => onTourCompleteRef.current?.(),
-      });
-    }, 80);
-
-    return () => {
-      window.clearTimeout(timer);
-      driverRef.current?.destroy();
-      driverRef.current = null;
-    };
-  }, [manualTourTick]);
+  }, [autoStartTour, manualTourTick, allCompleted]);
 
   const nextSlotMatches = useMemo(() => {
     if (pendingMatches.length === 0) return [];
