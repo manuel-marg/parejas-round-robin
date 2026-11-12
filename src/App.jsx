@@ -150,18 +150,18 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="header-inner">
-          <div style={{ minWidth: 0 }}>
+          <div className="brand-block">
             <h1 className="brand-title">
               <span className="material-symbols-outlined brand-icon" aria-hidden="true">
                 pickleball
               </span>
-              <span>{tournament ? tournament.title : 'Pickleball'}</span>
+              <span className="brand-name">{tournament ? tournament.title : 'Pickleball'}</span>
             </h1>
-            <p className="brand-subtitle">
-              {tournament
-                ? `${tournament.pairs.length} parejas · ${summary.completedMatches}/${summary.totalMatches} juegos · A ${tournament.targetPoints || 11} pts`
-                : 'Todos contra todos por parejas con descansos y estadísticas'}
-            </p>
+            {tournament && (
+              <p className="brand-subtitle">
+                {tournament.pairs.length} parejas · {summary.completedMatches}/{summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
+              </p>
+            )}
           </div>
 
           <div className="header-actions">
