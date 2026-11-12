@@ -1,14 +1,27 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { isMatchCompleted } from '../domain/stats.js';
+import { startMatchesTutorial } from '../domain/tutorial.js';
 import MatchCard from './MatchCard.jsx';
 
 /**
  * Vista principal de juegos: resalta el próximo turno/descanso, permite llenar puntajes
  * y habilita acceso directo a estadísticas finales al completar todos los partidos.
  */
-export default function MatchesView({ tournament, onScoreChange, onClearMatch, onGoToStats }) {
+export default function MatchesView({
+  tournament,
+  onScoreChange,
+  onClearMatch,
+  onGoToStats,
+  autoStartTour = false,
+  manualTourTick = 0,
+  onMatchesTourComplete,
+}) {
   const [filter, setFilter] = useState('all');
   const [pairFilter, setPairFilter] = useState('all');
+
+  const driverRef = useRef(null);
+  const onTourCompleteRef = useRef(onMatchesTourComplete);
+  onTourCompleteRef.current = onMatchesTourComplete;
 
   const pairMap = useMemo(
     () => new Map(tournament.pairs.map((p) => [p.id, p.name])),
@@ -21,6 +34,38 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
   );
   const completedCount = tournament.matches.length - pendingMatches.length;
   const allCompleted = tournament.matches.length > 0 && pendingMatches.length === 0;
+
+  useEffect(() => {
+    if (!autoStartTour || allCompleted) return undefined;
+    const timer = window.setTimeout(() => {
+      driverRef.current = startMatchesTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [autoStartTour, allCompleted]);
+
+  useEffect(() => {
+    if (manualTourTick === 0) return undefined;
+    setFilter('all');
+    setPairFilter('all');
+    const timer = window.setTimeout(() => {
+      driverRef.current = startMatchesTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
 
   const nextSlotMatches = useMemo(() => {
     if (pendingMatches.length === 0) return [];
@@ -43,7 +88,7 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
   return (
     <div>
       {nextSlotMatches.length > 0 ? (
-        <section className="highlight-card">
+        <section id="tour-current-court" className="highlight-card">
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <div>
               <span className="badge badge-success" style={{ marginBottom: '6px' }}>
@@ -71,7 +116,7 @@ export default function MatchesView({ tournament, onScoreChange, onClearMatch, o
           </div>
         </section>
       ) : (
-        <section className="highlight-card">
+        <section id="tour-current-court" className="highlight-card">
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <div>
               <span className="badge badge-success" style={{ marginBottom: '4px' }}>

@@ -10,6 +10,12 @@ import {
   deleteHistoryEntry,
   parseImportedTournament,
   formatShareableSummary,
+  loadTutorialState,
+  markSetupTourSeen,
+  markMatchesTourSeen,
+  markTournamentCompleted,
+  shouldAutoStartSetupTour,
+  shouldAutoStartMatchesTour,
 } from '../src/domain/storage.js';
 
 function makePairs(n) {
@@ -172,4 +178,30 @@ test('storage guarda y recupera torneo activo, historial, respaldo JSON y resume
 
   const afterDelete = deleteHistoryEntry('torneo-1', storage);
   assert.equal(afterDelete.length, 0);
+});
+
+test('tutorialState controla primera visita y desactiva autoarranque al completar torneo', () => {
+  const storage = createMemoryStorage();
+
+  const initial = loadTutorialState(storage);
+  assert.equal(initial.setupTourSeen, false);
+  assert.equal(initial.matchesTourSeen, false);
+  assert.equal(initial.tournamentCompleted, false);
+  assert.equal(shouldAutoStartSetupTour(initial), true);
+  assert.equal(shouldAutoStartMatchesTour(initial), true);
+
+  const afterSetup = markSetupTourSeen(storage);
+  assert.equal(afterSetup.setupTourSeen, true);
+  assert.equal(shouldAutoStartSetupTour(afterSetup), false);
+  assert.equal(shouldAutoStartMatchesTour(afterSetup), true);
+
+  const afterMatches = markMatchesTourSeen(storage);
+  assert.equal(afterMatches.matchesTourSeen, true);
+  assert.equal(shouldAutoStartMatchesTour(afterMatches), false);
+
+  const freshStorage = createMemoryStorage();
+  const completed = markTournamentCompleted(freshStorage);
+  assert.equal(completed.tournamentCompleted, true);
+  assert.equal(shouldAutoStartSetupTour(completed), false);
+  assert.equal(shouldAutoStartMatchesTour(completed), false);
 });

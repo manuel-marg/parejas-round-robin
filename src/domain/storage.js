@@ -4,6 +4,14 @@
 
 export const ACTIVE_TOURNAMENT_KEY = 'pickleball_rr_active_v1';
 export const HISTORY_KEY = 'pickleball_rr_history_v1';
+export const TUTORIAL_STATE_KEY = 'pickleball_rr_tutorial_v1';
+
+const DEFAULT_TUTORIAL_STATE = {
+  setupTourSeen: false,
+  matchesTourSeen: false,
+  tournamentCompleted: false,
+  updatedAt: null,
+};
 
 function resolveStorage(customStorage) {
   if (customStorage) return customStorage;
@@ -90,6 +98,60 @@ export function deleteHistoryEntry(entryId, customStorage) {
   const next = history.filter((item) => item.id !== entryId);
   safeWriteJson(HISTORY_KEY, next, customStorage);
   return next;
+}
+
+/**
+ * Lee el estado del tutorial y si el usuario ya completó algún torneo completo.
+ */
+export function loadTutorialState(customStorage) {
+  const data = safeReadJson(TUTORIAL_STATE_KEY, null, customStorage);
+  if (!data || typeof data !== 'object') {
+    return { ...DEFAULT_TUTORIAL_STATE };
+  }
+  return {
+    setupTourSeen: Boolean(data.setupTourSeen),
+    matchesTourSeen: Boolean(data.matchesTourSeen),
+    tournamentCompleted: Boolean(data.tournamentCompleted),
+    updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
+  };
+}
+
+export function updateTutorialState(patch, customStorage) {
+  const current = loadTutorialState(customStorage);
+  const next = {
+    ...current,
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
+  safeWriteJson(TUTORIAL_STATE_KEY, next, customStorage);
+  return next;
+}
+
+export function markSetupTourSeen(customStorage) {
+  return updateTutorialState({ setupTourSeen: true }, customStorage);
+}
+
+export function markMatchesTourSeen(customStorage) {
+  return updateTutorialState({ matchesTourSeen: true }, customStorage);
+}
+
+export function markTournamentCompleted(customStorage) {
+  return updateTutorialState(
+    {
+      setupTourSeen: true,
+      matchesTourSeen: true,
+      tournamentCompleted: true,
+    },
+    customStorage
+  );
+}
+
+export function shouldAutoStartSetupTour(tutorialState) {
+  return !tutorialState?.setupTourSeen && !tutorialState?.tournamentCompleted;
+}
+
+export function shouldAutoStartMatchesTour(tutorialState) {
+  return !tutorialState?.matchesTourSeen && !tutorialState?.tournamentCompleted;
 }
 
 /**

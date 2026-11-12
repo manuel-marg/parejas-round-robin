@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { startSetupTutorial } from '../domain/tutorial.js';
 
 /**
  * Pantalla inicial para agregar parejas manualmente, configurar el torneo y generar juegos.
  */
-export default function SetupView({ onStartTournament, history, onLoadHistory }) {
+export default function SetupView({
+  onStartTournament,
+  history,
+  onLoadHistory,
+  autoStartTour = false,
+  manualTourTick = 0,
+  onSetupTourComplete,
+}) {
   const [title, setTitle] = useState('Jornada de Pickleball');
   const [pairs, setPairs] = useState([]);
   const [newPairName, setNewPairName] = useState('');
@@ -12,6 +20,42 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
   const [courts, setCourts] = useState(1);
   const [targetPoints, setTargetPoints] = useState(11);
   const [error, setError] = useState('');
+
+  const driverRef = useRef(null);
+  const onTourCompleteRef = useRef(onSetupTourComplete);
+  onTourCompleteRef.current = onSetupTourComplete;
+
+  useEffect(() => {
+    if (!autoStartTour) return undefined;
+    const timer = window.setTimeout(() => {
+      setBulkMode(false);
+      driverRef.current = startSetupTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [autoStartTour]);
+
+  useEffect(() => {
+    if (manualTourTick === 0) return undefined;
+    setBulkMode(false);
+    const timer = window.setTimeout(() => {
+      driverRef.current = startSetupTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
 
   const totalMatches = pairs.length >= 2 ? (pairs.length * (pairs.length - 1)) / 2 : 0;
   const maxCourts = Math.max(1, Math.floor(pairs.length / 2));
@@ -80,7 +124,12 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
             <p className="card-subtitle">Agrega manualmente los nombres de cada pareja.</p>
           </div>
           <div className="preset-actions">
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBulkMode((v) => !v)}>
+            <button
+              id="tour-bulk-btn"
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setBulkMode((v) => !v)}
+            >
               {bulkMode ? 'Modo individual' : 'Pegar lista rápida'}
             </button>
           </div>
@@ -108,7 +157,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
           </div>
         ) : (
           <>
-            <form onSubmit={handleAddPair} className="add-pair-form">
+            <form id="tour-add-pair" onSubmit={handleAddPair} className="add-pair-form">
               <input
                 id="new-pair-name"
                 name="newPairName"
@@ -124,7 +173,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
               </button>
             </form>
 
-            <div className="pair-list">
+            <div id="tour-pair-list" className="pair-list">
               {pairs.map((pair, idx) => (
                 <div key={pair.id} className="pair-row">
                   <span className="pair-index">{idx + 1}</span>
@@ -163,7 +212,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
           <p className="card-subtitle">Se genera automáticamente el rol de juegos con descansos alternados.</p>
 
           <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
+            <div id="tour-title-field">
               <label className="label" htmlFor="tournament-title">Nombre del torneo</label>
               <input
                 id="tournament-title"
@@ -174,32 +223,34 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
               />
             </div>
 
-            <div>
-              <label className="label" htmlFor="courts-select">Canchas disponibles al mismo tiempo</label>
-              <select
-                id="courts-select"
-                className="select"
-                value={effectiveCourts}
-                onChange={(e) => setCourts(Number(e.target.value))}
-              >
-                <option value={1}>1 cancha (turnos secuenciales con descanso)</option>
-                {maxCourts >= 2 && <option value={2}>2 canchas simultáneas</option>}
-                {maxCourts >= 3 && <option value={3}>3 canchas simultáneas</option>}
-              </select>
-            </div>
+            <div id="tour-match-rules" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label className="label" htmlFor="courts-select">Canchas disponibles al mismo tiempo</label>
+                <select
+                  id="courts-select"
+                  className="select"
+                  value={effectiveCourts}
+                  onChange={(e) => setCourts(Number(e.target.value))}
+                >
+                  <option value={1}>1 cancha (turnos secuenciales con descanso)</option>
+                  {maxCourts >= 2 && <option value={2}>2 canchas simultáneas</option>}
+                  {maxCourts >= 3 && <option value={3}>3 canchas simultáneas</option>}
+                </select>
+              </div>
 
-            <div>
-              <label className="label" htmlFor="points-select">Puntaje de referencia por juego</label>
-              <select
-                id="points-select"
-                className="select"
-                value={targetPoints}
-                onChange={(e) => setTargetPoints(Number(e.target.value))}
-              >
-                <option value={11}>A 11 puntos (estándar pickleball)</option>
-                <option value={15}>A 15 puntos</option>
-                <option value={21}>A 21 puntos</option>
-              </select>
+              <div>
+                <label className="label" htmlFor="points-select">Puntaje de referencia por juego</label>
+                <select
+                  id="points-select"
+                  className="select"
+                  value={targetPoints}
+                  onChange={(e) => setTargetPoints(Number(e.target.value))}
+                >
+                  <option value={11}>A 11 puntos (estándar pickleball)</option>
+                  <option value={15}>A 15 puntos</option>
+                  <option value={21}>A 21 puntos</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -236,6 +287,7 @@ export default function SetupView({ onStartTournament, history, onLoadHistory })
           )}
 
           <button
+            id="tour-generate-btn"
             type="button"
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '14px', padding: '12px 16px' }}

@@ -5,8 +5,14 @@ import {
   deleteHistoryEntry,
   loadActiveTournament,
   loadTournamentHistory,
+  loadTutorialState,
+  markMatchesTourSeen,
+  markSetupTourSeen,
+  markTournamentCompleted,
   saveActiveTournament,
   saveTournamentToHistory,
+  shouldAutoStartMatchesTour,
+  shouldAutoStartSetupTour,
 } from './domain/storage.js';
 import SetupView from './components/SetupView.jsx';
 import MatchesView from './components/MatchesView.jsx';
@@ -19,6 +25,9 @@ import HistoryView from './components/HistoryView.jsx';
 export default function App() {
   const [tournament, setTournament] = useState(() => loadActiveTournament());
   const [history, setHistory] = useState(() => loadTournamentHistory());
+  const [tutorialState, setTutorialState] = useState(() => loadTutorialState());
+  const [setupTourTick, setSetupTourTick] = useState(0);
+  const [matchesTourTick, setMatchesTourTick] = useState(0);
   const [activeTab, setActiveTab] = useState('matches');
 
   useEffect(() => {
@@ -51,6 +60,12 @@ export default function App() {
     }
     return computeSummary(standings, tournament.matches);
   }, [tournament, standings]);
+
+  useEffect(() => {
+    if (summary.isFinished && !tutorialState.tournamentCompleted) {
+      setTutorialState(markTournamentCompleted());
+    }
+  }, [summary.isFinished, tutorialState.tournamentCompleted]);
 
   function handleStartTournament({ title, pairs, courts, targetPoints }) {
     const { matches, meta } = generateRoundRobinSchedule(pairs, { courts });
@@ -147,8 +162,23 @@ export default function App() {
             </p>
           </div>
 
-          {tournament && (
-            <div className="header-actions">
+          <div className="header-actions">
+            {(!tournament || activeTab === 'matches') && (
+              <button
+                type="button"
+                className="btn btn-header-ghost"
+                onClick={() => {
+                  if (!tournament) {
+                    setSetupTourTick((t) => t + 1);
+                  } else {
+                    setMatchesTourTick((t) => t + 1);
+                  }
+                }}
+              >
+                ? Guía
+              </button>
+            )}
+            {tournament && (
               <button
                 type="button"
                 className="btn btn-header-ghost"
@@ -156,8 +186,8 @@ export default function App() {
               >
                 + Nuevo
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
@@ -167,6 +197,9 @@ export default function App() {
             onStartTournament={handleStartTournament}
             history={history}
             onLoadHistory={handleLoadHistory}
+            autoStartTour={shouldAutoStartSetupTour(tutorialState)}
+            manualTourTick={setupTourTick}
+            onSetupTourComplete={() => setTutorialState(markSetupTourSeen())}
           />
         ) : (
           <>
@@ -191,6 +224,7 @@ export default function App() {
                   </span>
                 </button>
                 <button
+                  id="tour-stats-tab-desktop"
                   type="button"
                   role="tab"
                   aria-selected={activeTab === 'stats'}
@@ -225,6 +259,9 @@ export default function App() {
                 onScoreChange={handleScoreChange}
                 onClearMatch={handleClearMatch}
                 onGoToStats={() => setActiveTab('stats')}
+                autoStartTour={shouldAutoStartMatchesTour(tutorialState)}
+                manualTourTick={matchesTourTick}
+                onMatchesTourComplete={() => setTutorialState(markMatchesTourSeen())}
               />
             )}
 
@@ -262,6 +299,7 @@ export default function App() {
             <span>Juegos ({summary.completedMatches}/{summary.totalMatches})</span>
           </button>
           <button
+            id="tour-stats-tab-mobile"
             type="button"
             className={`mobile-nav-btn ${activeTab === 'stats' ? 'active' : ''}`}
             onClick={() => setActiveTab('stats')}
