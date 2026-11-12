@@ -15,8 +15,6 @@ export default function SetupView({
   const [title, setTitle] = useState('Jornada de Pickleball');
   const [pairs, setPairs] = useState([]);
   const [newPairName, setNewPairName] = useState('');
-  const [bulkMode, setBulkMode] = useState(false);
-  const [bulkText, setBulkText] = useState('');
   const [courts, setCourts] = useState(1);
   const [targetPoints, setTargetPoints] = useState(11);
   const [error, setError] = useState('');
@@ -28,7 +26,6 @@ export default function SetupView({
   useEffect(() => {
     if (!autoStartTour) return undefined;
     const timer = window.setTimeout(() => {
-      setBulkMode(false);
       driverRef.current = startSetupTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
@@ -43,7 +40,6 @@ export default function SetupView({
 
   useEffect(() => {
     if (manualTourTick === 0) return undefined;
-    setBulkMode(false);
     const timer = window.setTimeout(() => {
       driverRef.current = startSetupTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
@@ -67,24 +63,6 @@ export default function SetupView({
     if (!cleaned) return;
     setPairs((prev) => [...prev, { id: `p-${Date.now()}-${prev.length + 1}`, name: cleaned }]);
     setNewPairName('');
-    setError('');
-  }
-
-  function handleApplyBulk() {
-    const lines = bulkText
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-    if (lines.length < 2) {
-      setError('Escribe al menos 2 parejas (una por línea) para agregar la lista.');
-      return;
-    }
-    setPairs((prev) => [
-      ...prev,
-      ...lines.map((name, idx) => ({ id: `p-${Date.now()}-${prev.length + idx + 1}`, name })),
-    ]);
-    setBulkMode(false);
-    setBulkText('');
     setError('');
   }
 
@@ -118,92 +96,56 @@ export default function SetupView({
   return (
     <div className="setup-grid">
       <section className="card">
-        <div className="setup-header-row">
-          <div>
-            <h2 className="card-title">1. Registrar parejas</h2>
-            <p className="card-subtitle">Agrega manualmente los nombres de cada pareja.</p>
-          </div>
-          <div className="preset-actions">
-            <button
-              id="tour-bulk-btn"
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setBulkMode((v) => !v)}
-            >
-              {bulkMode ? 'Modo individual' : 'Pegar lista rápida'}
-            </button>
-          </div>
+        <div>
+          <h2 className="card-title">1. Registrar parejas</h2>
+          <p className="card-subtitle">Agrega manualmente los nombres de cada pareja.</p>
         </div>
 
-        {bulkMode ? (
-          <div style={{ marginTop: '14px' }}>
-            <label className="label" htmlFor="bulk-pairs">Escribe o pega una pareja por línea</label>
-            <textarea
-              id="bulk-pairs"
-              className="textarea"
-              rows={5}
-              placeholder={'Ana / Luis\nCarlos / Sofía\nMateo / Elena\nDiego / Valeria'}
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-            />
-            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-              <button type="button" className="btn btn-primary btn-sm" onClick={handleApplyBulk}>
-                Agregar lista
-              </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setBulkMode(false)}>
-                Cancelar
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <form id="tour-add-pair" onSubmit={handleAddPair} className="add-pair-form">
-              <input
-                id="new-pair-name"
-                name="newPairName"
-                type="text"
-                className="input"
-                aria-label="Nombre de la nueva pareja"
-                placeholder="Ej. Laura / Andrés"
-                value={newPairName}
-                onChange={(e) => setNewPairName(e.target.value)}
-              />
-              <button type="submit" className="btn btn-primary">
-                Agregar
-              </button>
-            </form>
+        <form id="tour-add-pair" onSubmit={handleAddPair} className="add-pair-form">
+          <input
+            id="new-pair-name"
+            name="newPairName"
+            type="text"
+            className="input"
+            aria-label="Nombre de la nueva pareja"
+            placeholder="Ej. Laura / Andrés"
+            value={newPairName}
+            onChange={(e) => setNewPairName(e.target.value)}
+          />
+          <button type="submit" className="btn btn-primary">
+            Agregar
+          </button>
+        </form>
 
-            <div id="tour-pair-list" className="pair-list">
-              {pairs.map((pair, idx) => (
-                <div key={pair.id} className="pair-row">
-                  <span className="pair-index">{idx + 1}</span>
-                  <input
-                    id={`pair-name-${pair.id}`}
-                    name={`pairName-${idx + 1}`}
-                    type="text"
-                    className="pair-name-input"
-                    aria-label={`Nombre de la pareja ${idx + 1}`}
-                    value={pair.name}
-                    onChange={(e) => handleRenamePair(pair.id, e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-danger-soft btn-sm"
-                    aria-label={`Eliminar ${pair.name}`}
-                    onClick={() => handleRemovePair(pair.id)}
-                  >
-                    Quitar
-                  </button>
-                </div>
-              ))}
-              {pairs.length === 0 && (
-                <p className="card-subtitle" style={{ padding: '12px 0' }}>
-                  No hay parejas todavía. Escribe una arriba y pulsa Agregar (mínimo 2 parejas).
-                </p>
-              )}
+        <div id="tour-pair-list" className="pair-list">
+          {pairs.map((pair, idx) => (
+            <div key={pair.id} className="pair-row">
+              <span className="pair-index">{idx + 1}</span>
+              <input
+                id={`pair-name-${pair.id}`}
+                name={`pairName-${idx + 1}`}
+                type="text"
+                className="pair-name-input"
+                aria-label={`Nombre de la pareja ${idx + 1}`}
+                value={pair.name}
+                onChange={(e) => handleRenamePair(pair.id, e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn-danger-soft btn-sm"
+                aria-label={`Eliminar ${pair.name}`}
+                onClick={() => handleRemovePair(pair.id)}
+              >
+                Quitar
+              </button>
             </div>
-          </>
-        )}
+          ))}
+          {pairs.length === 0 && (
+            <p className="card-subtitle" style={{ padding: '12px 0' }}>
+              No hay parejas todavía. Escribe una arriba y pulsa Agregar (mínimo 2 parejas).
+            </p>
+          )}
+        </div>
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

@@ -59,16 +59,6 @@ export function startSetupTutorial({ onComplete } = {}) {
       },
     },
     {
-      element: '#tour-bulk-btn',
-      popover: {
-        title: 'Opción rápida: pegar lista',
-        description:
-          'Si ya tienes los nombres en WhatsApp o notas, pulsa aquí para pegar varias parejas de golpe (una por línea).',
-        side: 'bottom',
-        align: 'end',
-      },
-    },
-    {
       element: '#tour-pair-list',
       popover: {
         title: '2. Revisa tus parejas (mínimo 2)',
