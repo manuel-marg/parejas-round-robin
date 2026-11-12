@@ -46,8 +46,10 @@ export default function MatchesView({
     () => tournament.matches.filter((m) => !isMatchCompleted(m)),
     [tournament.matches]
   );
-  const completedCount = tournament.matches.length - pendingMatches.length;
-  const allCompleted = tournament.matches.length > 0 && pendingMatches.length === 0;
+  const totalMatches = tournament.matches.length;
+  const completedCount = totalMatches - pendingMatches.length;
+  const progressPct = totalMatches > 0 ? Math.round((completedCount / totalMatches) * 100) : 0;
+  const allCompleted = totalMatches > 0 && pendingMatches.length === 0;
 
   useEffect(() => {
     if (!autoStartTour || allCompleted) return undefined;
@@ -131,46 +133,102 @@ export default function MatchesView({
               </div>
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
-              {completedCount} / {tournament.matches.length} juegos listos
+              {completedCount} / {totalMatches} juegos listos
             </div>
           </div>
         </section>
       ) : (
-        <>
-          <section id="tour-current-court" className="highlight-card">
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <div>
-                <span className="badge badge-success" style={{ marginBottom: '4px' }}>
-                  Fase clasificatoria completada
-                </span>
-                <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>
-                  Todos los {tournament.matches.length} juegos tienen marcador. ¡Hora de la Gran Final!
-                </div>
+        <section id="tour-current-court" className="highlight-card">
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+            <div>
+              <span className="badge badge-success" style={{ marginBottom: '4px' }}>
+                Fase clasificatoria completada
+              </span>
+              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>
+                Todos los {totalMatches} juegos tienen marcador. ¡Hora de la Gran Final!
               </div>
-              <button type="button" className="btn btn-primary" onClick={onGoToStats}>
-                Ver promedios y tabla
-              </button>
             </div>
-          </section>
-
-          <FinalMatchCard
-            finalMatchResolved={finalMatchResolved}
-            isQualifyingFinished={allCompleted}
-            onFinalScoreChange={onFinalScoreChange}
-            onFinalPairingChange={onFinalPairingChange}
-            onClearFinal={onClearFinal}
-          />
-        </>
+            <button type="button" className="btn btn-primary" onClick={onGoToStats}>
+              Ver promedios y tabla
+            </button>
+          </div>
+        </section>
       )}
 
-      <div className="filter-toolbar">
+      {/* Barra de progreso hacia la Gran Final */}
+      <section className="card matches-progress-card">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="progress-trophy" aria-hidden="true">🏆</span>
+              <span style={{ fontWeight: 700, fontSize: '0.98rem', color: 'var(--text)' }}>
+                {allCompleted ? '¡Fase clasificatoria completada!' : 'Progreso hacia la Gran Final'}
+              </span>
+            </div>
+            <span
+              className={`badge ${allCompleted ? 'badge-success' : 'badge-primary'}`}
+              style={{ fontSize: '0.82rem', fontWeight: 700 }}
+            >
+              {completedCount} de {totalMatches} juegos ({progressPct}%)
+            </span>
+          </div>
+
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-valuenow={progressPct}
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-label={`Progreso del torneo: ${progressPct}%`}
+            style={{ height: '10px' }}
+          >
+            <div
+              className="progress-fill"
+              style={{
+                width: `${progressPct}%`,
+                background: allCompleted
+                  ? 'linear-gradient(90deg, #16a34a, #22c55e)'
+                  : 'linear-gradient(90deg, #0f766e, #84cc16)',
+              }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '4px', fontSize: '0.83rem', color: 'var(--text-muted)' }}>
+            <span>
+              {allCompleted
+                ? '¡100% alcanzado! La Gran Final está lista abajo con las 2 mejores mujeres y 2 mejores hombres.'
+                : pendingMatches.length === 1
+                ? 'Falta solo 1 juego para alcanzar el 100% y habilitar la Gran Final.'
+                : `Faltan ${pendingMatches.length} juegos para completar el 100% y desbloquear la Gran Final.`}
+            </span>
+            {allCompleted && (
+              <span style={{ fontWeight: 700, color: '#16a34a' }}>
+                ✓ 100% completado
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {allCompleted && (
+        <FinalMatchCard
+          finalMatchResolved={finalMatchResolved}
+          isQualifyingFinished={allCompleted}
+          onFinalScoreChange={onFinalScoreChange}
+          onFinalPairingChange={onFinalPairingChange}
+          onClearFinal={onClearFinal}
+        />
+      )}
+
+      {/* Filtros: visibles en escritorio para control avanzado, ocultos en móviles para una vista limpia */}
+      <div className="filter-toolbar desktop-filter-toolbar">
         <div className="pill-group" role="group" aria-label="Filtrar juegos por estado">
           <button
             type="button"
             className={`pill-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            Todos ({tournament.matches.length})
+            Todos ({totalMatches})
           </button>
           <button
             type="button"

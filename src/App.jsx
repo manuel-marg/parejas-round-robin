@@ -215,49 +215,55 @@ export default function App() {
     <div className="app-shell">
       <header className="app-header">
         <div className="header-inner">
-          <div className="brand-block">
+          <div className="header-top-row">
             <h1 className="brand-title">
               <span className="material-symbols-outlined brand-icon" aria-hidden="true">
                 pickleball
               </span>
-              <span className="brand-name">{tournament ? tournament.title : 'Pickleball'}</span>
+              <span className="brand-name">Pickleball</span>
             </h1>
-            {tournament && (
-              <p className="brand-subtitle">
-                {womenCount}M · {menCount}H · {summary.completedMatches}/{summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
-              </p>
-            )}
+
+            <div className="header-actions">
+              {(!tournament || activeTab === 'matches') && (
+                <button
+                  type="button"
+                  className="btn btn-header-ghost"
+                  onClick={() => {
+                    if (!tournament) {
+                      setSetupTourTick((t) => t + 1);
+                    } else {
+                      setMatchesTourTick((t) => t + 1);
+                    }
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
+                    help
+                  </span>
+                  <span>Guía</span>
+                </button>
+              )}
+              {tournament && (
+                <button
+                  type="button"
+                  className="btn btn-header-ghost"
+                  onClick={handleNewTournamentPrompt}
+                >
+                  + Nuevo
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="header-actions">
-            {(!tournament || activeTab === 'matches') && (
-              <button
-                type="button"
-                className="btn btn-header-ghost"
-                onClick={() => {
-                  if (!tournament) {
-                    setSetupTourTick((t) => t + 1);
-                  } else {
-                    setMatchesTourTick((t) => t + 1);
-                  }
-                }}
-              >
-                <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
-                  help
-                </span>
-                <span>Guía</span>
-              </button>
-            )}
-            {tournament && (
-              <button
-                type="button"
-                className="btn btn-header-ghost"
-                onClick={handleNewTournamentPrompt}
-              >
-                + Nuevo
-              </button>
-            )}
-          </div>
+          {tournament && (
+            <div className="header-meta-row">
+              <p className="header-meta-text">
+                {tournament.title && tournament.title !== 'Pickleball' && (
+                  <strong>{tournament.title} · </strong>
+                )}
+                {womenCount} {womenCount === 1 ? 'mujer' : 'mujeres'} · {menCount} {menCount === 1 ? 'hombre' : 'hombres'} · {summary.completedMatches} de {summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
+              </p>
+            </div>
+          )}
         </div>
       </header>
 
