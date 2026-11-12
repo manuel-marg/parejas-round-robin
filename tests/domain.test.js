@@ -21,9 +21,16 @@ import {
   loadTutorialState,
   markSetupTourSeen,
   markMatchesTourSeen,
+  markStatsTourSeen,
+  markHistoryTourSeen,
   markTournamentCompleted,
+  activateHelpSession,
   shouldAutoStartSetupTour,
   shouldAutoStartMatchesTour,
+  shouldAutoStartStatsTour,
+  shouldAutoStartHistoryTour,
+  isHelpActiveForToday,
+  getTodayDateString,
 } from '../src/domain/storage.js';
 
 function makePlayers(womenCount, menCount) {
@@ -331,4 +338,45 @@ test('tutorialState controla primera visita y desactiva autoarranque al completa
   assert.equal(completed.tournamentCompleted, true);
   assert.equal(shouldAutoStartSetupTour(completed), false);
   assert.equal(shouldAutoStartMatchesTour(completed), false);
+  assert.equal(shouldAutoStartStatsTour(completed), false);
+  assert.equal(shouldAutoStartHistoryTour(completed), false);
+});
+
+test('activateHelpSession activa la guía para la fecha actual y solo se muestra una vez por vista', () => {
+  const storage = createMemoryStorage();
+  const today = getTodayDateString();
+
+  // Estado inicial sin solicitar ayuda explícita
+  const initial = loadTutorialState(storage);
+  assert.equal(initial.helpRequestedDate, null);
+  // Stats e History no arrancan solos si el usuario no ha pedido ayuda
+  assert.equal(shouldAutoStartStatsTour(initial), false);
+  assert.equal(shouldAutoStartHistoryTour(initial), false);
+
+  // El usuario presiona "Ayuda"
+  const activated = activateHelpSession(storage);
+  assert.equal(activated.helpRequestedDate, today);
+  assert.equal(isHelpActiveForToday(activated), true);
+  assert.equal(shouldAutoStartStatsTour(activated), true);
+  assert.equal(shouldAutoStartHistoryTour(activated), true);
+
+  // El usuario visita Promedios y se completa el tour
+  const afterStats = markStatsTourSeen(storage);
+  assert.equal(afterStats.statsTourSeen, true);
+  assert.equal(shouldAutoStartStatsTour(afterStats), false, 'No debe volver a arrancar en Promedios');
+  assert.equal(shouldAutoStartHistoryTour(afterStats), true, 'Historial sigue pendiente');
+
+  // El usuario visita Historial y se completa el tour
+  const afterHistory = markHistoryTourSeen(storage);
+  assert.equal(afterHistory.historyTourSeen, true);
+  assert.equal(shouldAutoStartHistoryTour(afterHistory), false, 'No debe volver a arrancar en Historial');
+
+  // Si pasa otro día simulado, ya no está activa la sesión del día anterior
+  const pastSession = {
+    ...afterHistory,
+    helpRequestedDate: '2020-01-01',
+    statsTourSeen: false,
+  };
+  assert.equal(isHelpActiveForToday(pastSession), false);
+  assert.equal(shouldAutoStartStatsTour(pastSession), false);
 });

@@ -6,10 +6,17 @@ export const ACTIVE_TOURNAMENT_KEY = 'pickleball_rr_active_v1';
 export const HISTORY_KEY = 'pickleball_rr_history_v1';
 export const TUTORIAL_STATE_KEY = 'pickleball_rr_tutorial_v1';
 
+export function getTodayDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 const DEFAULT_TUTORIAL_STATE = {
   setupTourSeen: false,
   matchesTourSeen: false,
+  statsTourSeen: false,
+  historyTourSeen: false,
   tournamentCompleted: false,
+  helpRequestedDate: null,
   updatedAt: null,
 };
 
@@ -143,7 +150,10 @@ export function loadTutorialState(customStorage) {
   return {
     setupTourSeen: Boolean(data.setupTourSeen),
     matchesTourSeen: Boolean(data.matchesTourSeen),
+    statsTourSeen: Boolean(data.statsTourSeen),
+    historyTourSeen: Boolean(data.historyTourSeen),
     tournamentCompleted: Boolean(data.tournamentCompleted),
+    helpRequestedDate: typeof data.helpRequestedDate === 'string' ? data.helpRequestedDate : null,
     updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : null,
   };
 }
@@ -159,6 +169,20 @@ export function updateTutorialState(patch, customStorage) {
   return next;
 }
 
+export function activateHelpSession(customStorage) {
+  const today = getTodayDateString();
+  return updateTutorialState(
+    {
+      helpRequestedDate: today,
+      setupTourSeen: false,
+      matchesTourSeen: false,
+      statsTourSeen: false,
+      historyTourSeen: false,
+    },
+    customStorage
+  );
+}
+
 export function markSetupTourSeen(customStorage) {
   return updateTutorialState({ setupTourSeen: true }, customStorage);
 }
@@ -167,23 +191,54 @@ export function markMatchesTourSeen(customStorage) {
   return updateTutorialState({ matchesTourSeen: true }, customStorage);
 }
 
+export function markStatsTourSeen(customStorage) {
+  return updateTutorialState({ statsTourSeen: true }, customStorage);
+}
+
+export function markHistoryTourSeen(customStorage) {
+  return updateTutorialState({ historyTourSeen: true }, customStorage);
+}
+
 export function markTournamentCompleted(customStorage) {
   return updateTutorialState(
     {
       setupTourSeen: true,
       matchesTourSeen: true,
+      statsTourSeen: true,
+      historyTourSeen: true,
       tournamentCompleted: true,
     },
     customStorage
   );
 }
 
+export function isHelpActiveForToday(tutorialState) {
+  return Boolean(
+    tutorialState?.helpRequestedDate &&
+    tutorialState.helpRequestedDate === getTodayDateString()
+  );
+}
+
 export function shouldAutoStartSetupTour(tutorialState) {
-  return !tutorialState?.setupTourSeen && !tutorialState?.tournamentCompleted;
+  if (tutorialState?.tournamentCompleted) return false;
+  if (tutorialState?.setupTourSeen) return false;
+  return isHelpActiveForToday(tutorialState) || !tutorialState?.helpRequestedDate;
 }
 
 export function shouldAutoStartMatchesTour(tutorialState) {
-  return !tutorialState?.matchesTourSeen && !tutorialState?.tournamentCompleted;
+  if (tutorialState?.tournamentCompleted) return false;
+  if (tutorialState?.matchesTourSeen) return false;
+  return isHelpActiveForToday(tutorialState) || !tutorialState?.helpRequestedDate;
+}
+
+export function shouldAutoStartStatsTour(tutorialState) {
+  if (tutorialState?.statsTourSeen) return false;
+  return isHelpActiveForToday(tutorialState);
+}
+
+export function shouldAutoStartHistoryTour(tutorialState) {
+  if (tutorialState?.historyTourSeen) return false;
+  return isHelpActiveForToday(tutorialState);
 }
 
 /**

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { formatShareableSummary } from '../domain/storage.js';
+import { startStatsTutorial } from '../domain/tutorial.js';
 import FinalMatchCard from './FinalMatchCard.jsx';
 
 /**
@@ -136,13 +137,49 @@ export default function StatsView({
   onFinalPairingChange,
   onClearFinal,
   onGoToMatches,
+  autoStartTour = false,
+  manualTourTick = 0,
+  onStatsTourComplete,
 }) {
+  const driverRef = useRef(null);
+  const onTourCompleteRef = useRef(onStatsTourComplete);
+  onTourCompleteRef.current = onStatsTourComplete;
   const shareText = formatShareableSummary(tournament, standings, finalMatchResolved);
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
+  useEffect(() => {
+    if (!autoStartTour) return undefined;
+    const timer = window.setTimeout(() => {
+      driverRef.current = startStatsTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [autoStartTour]);
+
+  useEffect(() => {
+    if (manualTourTick === 0) return undefined;
+    const timer = window.setTimeout(() => {
+      driverRef.current = startStatsTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
+
   return (
     <div>
-      <section className="card" style={{ marginBottom: '14px' }}>
+      <section id="tour-stats-progress" className="card" style={{ marginBottom: '14px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <div>
@@ -169,30 +206,36 @@ export default function StatsView({
         </div>
       </section>
 
-      <GenderStandingsSection
-        title="1. Mujeres — Promedios individuales"
-        subtitle="Las 2 mejores mujeres clasifican a la Gran Final."
-        playerColumnLabel="Jugadora"
-        rows={standings.women}
-        isFinished={summary.isFinished}
-      />
+      <div id="tour-stats-women">
+        <GenderStandingsSection
+          title="1. Mujeres — Promedios individuales"
+          subtitle="Las 2 mejores mujeres clasifican a la Gran Final."
+          playerColumnLabel="Jugadora"
+          rows={standings.women}
+          isFinished={summary.isFinished}
+        />
+      </div>
 
-      <GenderStandingsSection
-        title="2. Hombres — Promedios individuales"
-        subtitle="Los 2 mejores hombres clasifican a la Gran Final."
-        playerColumnLabel="Jugador"
-        rows={standings.men}
-        isFinished={summary.isFinished}
-      />
+      <div id="tour-stats-men">
+        <GenderStandingsSection
+          title="2. Hombres — Promedios individuales"
+          subtitle="Los 2 mejores hombres clasifican a la Gran Final."
+          playerColumnLabel="Jugador"
+          rows={standings.men}
+          isFinished={summary.isFinished}
+        />
+      </div>
 
-      <FinalMatchCard
-        finalMatchResolved={finalMatchResolved}
-        isQualifyingFinished={summary.isFinished}
-        onFinalScoreChange={onFinalScoreChange}
-        onFinalPairingChange={onFinalPairingChange}
-        onClearFinal={onClearFinal}
-        onGoToMatches={onGoToMatches}
-      />
+      <div id="tour-stats-final">
+        <FinalMatchCard
+          finalMatchResolved={finalMatchResolved}
+          isQualifyingFinished={summary.isFinished}
+          onFinalScoreChange={onFinalScoreChange}
+          onFinalPairingChange={onFinalPairingChange}
+          onClearFinal={onClearFinal}
+          onGoToMatches={onGoToMatches}
+        />
+      </div>
     </div>
   );
 }

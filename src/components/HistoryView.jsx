@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { isMatchCompleted } from '../domain/stats.js';
+import { startHistoryTutorial } from '../domain/tutorial.js';
 
 /**
  * Vista de gestión del torneo e historial guardado en este navegador.
@@ -12,13 +13,49 @@ export default function HistoryView({
   onDeleteHistory,
   onResetScores,
   onNewTournament,
+  autoStartTour = false,
+  manualTourTick = 0,
+  onHistoryTourComplete,
 }) {
+  const driverRef = useRef(null);
+  const onTourCompleteRef = useRef(onHistoryTourComplete);
+  onTourCompleteRef.current = onHistoryTourComplete;
   const womenCount = tournament.players.filter((p) => p.gender === 'M').length;
   const menCount = tournament.players.filter((p) => p.gender === 'H').length;
 
+  useEffect(() => {
+    if (!autoStartTour) return undefined;
+    const timer = window.setTimeout(() => {
+      driverRef.current = startHistoryTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [autoStartTour]);
+
+  useEffect(() => {
+    if (manualTourTick === 0) return undefined;
+    const timer = window.setTimeout(() => {
+      driverRef.current = startHistoryTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <section className="card">
+      <section id="tour-history-actions" className="card">
         <h2 className="card-title">Acciones del torneo actual</h2>
         <p className="card-subtitle">
           Administra los puntajes o guarda este torneo en el historial del dispositivo.
@@ -62,7 +99,7 @@ export default function HistoryView({
         </div>
       </section>
 
-      <section className="card">
+      <section id="tour-history-list" className="card">
         <h3 className="card-title">Historial guardado ({history.length})</h3>
         <p className="card-subtitle">
           Torneos guardados en este dispositivo.

@@ -6,17 +6,22 @@ import {
   resolveFinalMatch,
 } from './domain/stats.js';
 import {
+  activateHelpSession,
   deleteHistoryEntry,
   loadActiveTournament,
   loadTournamentHistory,
   loadTutorialState,
+  markHistoryTourSeen,
   markMatchesTourSeen,
   markSetupTourSeen,
+  markStatsTourSeen,
   markTournamentCompleted,
   saveActiveTournament,
   saveTournamentToHistory,
+  shouldAutoStartHistoryTour,
   shouldAutoStartMatchesTour,
   shouldAutoStartSetupTour,
+  shouldAutoStartStatsTour,
 } from './domain/storage.js';
 import SetupView from './components/SetupView.jsx';
 import MatchesView from './components/MatchesView.jsx';
@@ -32,6 +37,8 @@ export default function App() {
   const [tutorialState, setTutorialState] = useState(() => loadTutorialState());
   const [setupTourTick, setSetupTourTick] = useState(0);
   const [matchesTourTick, setMatchesTourTick] = useState(0);
+  const [statsTourTick, setStatsTourTick] = useState(0);
+  const [historyTourTick, setHistoryTourTick] = useState(0);
   const [activeTab, setActiveTab] = useState('matches');
 
   useEffect(() => {
@@ -208,6 +215,21 @@ export default function App() {
     }
   }
 
+  function handleHelpClick() {
+    const nextState = activateHelpSession();
+    setTutorialState(nextState);
+
+    if (!tournament) {
+      setSetupTourTick((t) => t + 1);
+    } else if (activeTab === 'matches') {
+      setMatchesTourTick((t) => t + 1);
+    } else if (activeTab === 'stats') {
+      setStatsTourTick((t) => t + 1);
+    } else if (activeTab === 'history') {
+      setHistoryTourTick((t) => t + 1);
+    }
+  }
+
   const womenCount = tournament ? tournament.players.filter((p) => p.gender === 'M').length : 0;
   const menCount = tournament ? tournament.players.filter((p) => p.gender === 'H').length : 0;
 
@@ -224,24 +246,16 @@ export default function App() {
             </h1>
 
             <div className="header-actions">
-              {(!tournament || activeTab === 'matches') && (
-                <button
-                  type="button"
-                  className="btn btn-header-ghost"
-                  onClick={() => {
-                    if (!tournament) {
-                      setSetupTourTick((t) => t + 1);
-                    } else {
-                      setMatchesTourTick((t) => t + 1);
-                    }
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
-                    help
-                  </span>
-                  <span>Guía</span>
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn btn-header-ghost"
+                onClick={handleHelpClick}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }} aria-hidden="true">
+                  help
+                </span>
+                <span>Ayuda</span>
+              </button>
               {tournament && (
                 <button
                   type="button"
@@ -355,6 +369,9 @@ export default function App() {
                 onFinalPairingChange={handleFinalPairingChange}
                 onClearFinal={handleClearFinal}
                 onGoToMatches={() => setActiveTab('matches')}
+                autoStartTour={shouldAutoStartStatsTour(tutorialState)}
+                manualTourTick={statsTourTick}
+                onStatsTourComplete={() => setTutorialState(markStatsTourSeen())}
               />
             )}
 
@@ -367,6 +384,9 @@ export default function App() {
                 onDeleteHistory={handleDeleteHistory}
                 onResetScores={handleResetScores}
                 onNewTournament={() => setTournament(null)}
+                autoStartTour={shouldAutoStartHistoryTour(tutorialState)}
+                manualTourTick={historyTourTick}
+                onHistoryTourComplete={() => setTutorialState(markHistoryTourSeen())}
               />
             )}
           </>
