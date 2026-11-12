@@ -18,7 +18,7 @@ function GenderStandingsSection({ title, subtitle, playerColumnLabel, rows, isFi
       <div className="standings-mobile-list">
         {rows.map((row) => {
           const diffLabel = row.pointDiff > 0 ? `+${row.pointDiff}` : `${row.pointDiff}`;
-          const isFinalist = row.rank <= 2 && row.played > 0;
+          const isFinalist = isFinished && row.rank <= 2 && row.played > 0;
           return (
             <div
               key={row.playerId}
@@ -30,7 +30,7 @@ function GenderStandingsSection({ title, subtitle, playerColumnLabel, rows, isFi
                   <span style={{ overflowWrap: 'anywhere' }}>{row.name}</span>
                   {isFinalist && (
                     <span className="badge badge-success">
-                      {isFinished ? 'Finalista' : 'Top 2'}
+                      Finalista
                     </span>
                   )}
                 </div>
@@ -88,7 +88,7 @@ function GenderStandingsSection({ title, subtitle, playerColumnLabel, rows, isFi
           </thead>
           <tbody>
             {rows.map((row) => {
-              const isFinalist = row.rank <= 2 && row.played > 0;
+              const isFinalist = isFinished && row.rank <= 2 && row.played > 0;
               return (
                 <tr key={row.playerId} className={isFinalist ? 'top-row' : ''}>
                   <td style={{ fontWeight: 700 }}>{row.rank}</td>
@@ -97,7 +97,7 @@ function GenderStandingsSection({ title, subtitle, playerColumnLabel, rows, isFi
                       <span>{row.name}</span>
                       {isFinalist && (
                         <span className="badge badge-success">
-                          {isFinished ? 'Finalista' : 'Top 2'}
+                          Finalista
                         </span>
                       )}
                     </span>
@@ -135,6 +135,7 @@ export default function StatsView({
   onFinalScoreChange,
   onFinalPairingChange,
   onClearFinal,
+  onGoToMatches,
 }) {
   const shareText = formatShareableSummary(tournament, standings, finalMatchResolved);
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
@@ -190,6 +191,7 @@ export default function StatsView({
         onFinalScoreChange={onFinalScoreChange}
         onFinalPairingChange={onFinalPairingChange}
         onClearFinal={onClearFinal}
+        onGoToMatches={onGoToMatches}
       />
     </div>
   );

@@ -354,6 +354,7 @@ export default function App() {
                 onFinalScoreChange={handleFinalScoreChange}
                 onFinalPairingChange={handleFinalPairingChange}
                 onClearFinal={handleClearFinal}
+                onGoToMatches={() => setActiveTab('matches')}
               />
             )}
 
