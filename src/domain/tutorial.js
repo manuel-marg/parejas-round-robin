@@ -43,29 +43,29 @@ export function startSetupTutorial({ onComplete } = {}) {
   const steps = [
     {
       popover: {
-        title: 'Cómo crear tu torneo',
+        title: 'Cómo crear tu torneo mixto',
         description:
-          'Te mostramos paso a paso qué llenar en esta pantalla para registrar las parejas y empezar a jugar.',
+          'Registra a cada persona de forma individual (mujeres y hombres). El sistema rotará las parejas en cada juego sin repetir compañero.',
       },
     },
     {
-      element: '#tour-add-pair',
+      element: '#tour-add-women',
       popover: {
-        title: '1. Agrega parejas una por una',
+        title: '1. Agrega a las mujeres',
         description:
-          'Escribe el nombre de una pareja (ej. "Laura / Andrés") y pulsa Agregar. Puedes ir sumándolas poco a poco.',
+          'Escribe el nombre de cada jugadora y pulsa Agregar. Lo ideal es registrar 4 mujeres (mínimo 2).',
         side: 'bottom',
         align: 'start',
       },
     },
     {
-      element: '#tour-pair-list',
+      element: '#tour-add-men',
       popover: {
-        title: '2. Revisa tus parejas (mínimo 2)',
+        title: '2. Agrega a los hombres',
         description:
-          'Aquí aparecerán conforme las agregues. Puedes editar cualquier nombre o quitarlo antes de comenzar.',
-        side: 'top',
-        align: 'center',
+          'Escribe el nombre de cada jugador y pulsa Agregar. Con 4 mujeres y 4 hombres se generan 8 partidos (4 por persona).',
+        side: 'bottom',
+        align: 'start',
       },
     },
     {
@@ -83,7 +83,7 @@ export function startSetupTutorial({ onComplete } = {}) {
       popover: {
         title: '4. Canchas y puntaje',
         description:
-          'Deja 1 cancha (con descansos automáticos) o elige más si tienen disponibles, y selecciona a cuántos puntos juegan (11, 15 o 21).',
+          'Elige 1 cancha (turnos secuenciales) o 2 canchas simultáneas, y selecciona el puntaje de referencia (11, 15 o 21).',
         side: 'top',
         align: 'start',
       },
@@ -93,7 +93,7 @@ export function startSetupTutorial({ onComplete } = {}) {
       popover: {
         title: '5. ¡Genera los partidos!',
         description:
-          'Cuando registres al menos 2 parejas, pulsa aquí para crear automáticamente todos los juegos todos contra todos.',
+          'Al terminar los partidos clasificatorios, las 2 mejores mujeres y los 2 mejores hombres jugarán la Gran Final.',
         side: 'top',
         align: 'center',
       },
@@ -113,7 +113,7 @@ export function startMatchesTutorial({ onComplete } = {}) {
       popover: {
         title: 'En cancha ahora',
         description:
-          'Aquí ves qué partido se juega en este momento y qué parejas descansan mientras tanto.',
+          'Aquí ves qué parejas mixtas juegan en este momento y qué personas descansan mientras tanto.',
         side: 'bottom',
         align: 'start',
       },
@@ -123,7 +123,7 @@ export function startMatchesTutorial({ onComplete } = {}) {
       popover: {
         title: 'Anota cada marcador',
         description:
-          'Usa los botones − y + (o escribe directo) para guardar los puntos. Al llenar todos los juegos, aparecerá el botón para ver las estadísticas finales.',
+          'Usa los botones − y + (o escribe directo) para guardar los puntos. Al llenar todos los juegos se habilitará la Gran Final.',
         side: 'bottom',
         align: 'center',
       },
@@ -137,9 +137,9 @@ export function startMatchesTutorial({ onComplete } = {}) {
         return document.querySelector('#tour-stats-tab-mobile') || undefined;
       },
       popover: {
-        title: 'Tabla final y WhatsApp',
+        title: 'Promedios y WhatsApp',
         description:
-          'Entra aquí en cualquier momento para ver la tabla de posiciones y compartir los resultados por WhatsApp.',
+          'Consulta aquí los promedios individuales (mujeres primero y luego hombres), los clasificados a la final y comparte por WhatsApp.',
         side: 'bottom',
         align: 'center',
       },

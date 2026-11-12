@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { generateRoundRobinSchedule } from './domain/scheduler.js';
-import { computeStandings, computeSummary } from './domain/stats.js';
+import { generateMixedRoundRobinSchedule } from './domain/scheduler.js';
+import {
+  computeIndividualStandings,
+  computeSummary,
+  resolveFinalMatch,
+} from './domain/stats.js';
 import {
   deleteHistoryEntry,
   loadActiveTournament,
@@ -20,7 +24,7 @@ import StatsView from './components/StatsView.jsx';
 import HistoryView from './components/HistoryView.jsx';
 
 /**
- * Componente raíz de la aplicación Pickleball.
+ * Componente raíz de la aplicación Pickleball (parejas mixtas rotativas).
  */
 export default function App() {
   const [tournament, setTournament] = useState(() => loadActiveTournament());
@@ -41,9 +45,14 @@ export default function App() {
   }, [activeTab]);
 
   const standings = useMemo(() => {
-    if (!tournament) return [];
-    return computeStandings(tournament.pairs, tournament.matches);
+    if (!tournament) return { women: [], men: [], all: [] };
+    return computeIndividualStandings(tournament.players, tournament.matches);
   }, [tournament]);
+
+  const finalMatchResolved = useMemo(() => {
+    if (!tournament) return null;
+    return resolveFinalMatch(standings, tournament.finalMatch);
+  }, [tournament, standings]);
 
   const summary = useMemo(() => {
     if (!tournament) {
@@ -52,13 +61,12 @@ export default function App() {
         completedMatches: 0,
         progressPct: 0,
         isFinished: false,
-        topWinners: [],
-        lowestWinners: [],
-        bestAttack: null,
-        bestDiff: null,
+        isFinalCompleted: false,
+        topWomen: [],
+        topMen: [],
       };
     }
-    return computeSummary(standings, tournament.matches);
+    return computeSummary(standings, tournament.matches, tournament.finalMatch);
   }, [tournament, standings]);
 
   useEffect(() => {
@@ -67,15 +75,20 @@ export default function App() {
     }
   }, [summary.isFinished, tutorialState.tournamentCompleted]);
 
-  function handleStartTournament({ title, pairs, courts, targetPoints }) {
-    const { matches, meta } = generateRoundRobinSchedule(pairs, { courts });
+  function handleStartTournament({ title, players, courts, targetPoints }) {
+    const { matches, meta } = generateMixedRoundRobinSchedule(players, { courts });
     setTournament({
       id: `torneo-${Date.now()}`,
       title,
       courts: meta.courts,
       targetPoints,
-      pairs,
+      players,
       matches,
+      finalMatch: {
+        pairingMode: 'crossed',
+        scoreA: null,
+        scoreB: null,
+      },
       meta,
     });
     setActiveTab('matches');
@@ -105,12 +118,60 @@ export default function App() {
     });
   }
 
+  function handleFinalScoreChange(side, value) {
+    setTournament((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        finalMatch: {
+          pairingMode: prev.finalMatch?.pairingMode || 'crossed',
+          scoreA: prev.finalMatch?.scoreA ?? null,
+          scoreB: prev.finalMatch?.scoreB ?? null,
+          [side]: value,
+        },
+      };
+    });
+  }
+
+  function handleFinalPairingChange(pairingMode) {
+    setTournament((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        finalMatch: {
+          scoreA: prev.finalMatch?.scoreA ?? null,
+          scoreB: prev.finalMatch?.scoreB ?? null,
+          pairingMode,
+        },
+      };
+    });
+  }
+
+  function handleClearFinal() {
+    setTournament((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        finalMatch: {
+          pairingMode: prev.finalMatch?.pairingMode || 'crossed',
+          scoreA: null,
+          scoreB: null,
+        },
+      };
+    });
+  }
+
   function handleResetScores() {
     setTournament((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
         matches: prev.matches.map((m) => ({ ...m, scoreA: null, scoreB: null })),
+        finalMatch: {
+          pairingMode: prev.finalMatch?.pairingMode || 'crossed',
+          scoreA: null,
+          scoreB: null,
+        },
       };
     });
     setActiveTab('matches');
@@ -118,7 +179,7 @@ export default function App() {
 
   function handleSaveToHistory() {
     if (!tournament) return;
-    const next = saveTournamentToHistory(tournament, standings);
+    const next = saveTournamentToHistory(tournament, standings, finalMatchResolved);
     setHistory(next);
   }
 
@@ -128,8 +189,9 @@ export default function App() {
       title: entry.title,
       courts: entry.courts || 1,
       targetPoints: entry.targetPoints || 11,
-      pairs: entry.pairs,
+      players: entry.players,
       matches: entry.matches,
+      finalMatch: entry.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
       meta: entry.meta || null,
     });
     setActiveTab('matches');
@@ -146,6 +208,9 @@ export default function App() {
     }
   }
 
+  const womenCount = tournament ? tournament.players.filter((p) => p.gender === 'M').length : 0;
+  const menCount = tournament ? tournament.players.filter((p) => p.gender === 'H').length : 0;
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -159,7 +224,7 @@ export default function App() {
             </h1>
             {tournament && (
               <p className="brand-subtitle">
-                {tournament.pairs.length} parejas · {summary.completedMatches}/{summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
+                {womenCount}M · {menCount}H · {summary.completedMatches}/{summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
               </p>
             )}
           </div>
@@ -236,7 +301,7 @@ export default function App() {
                   className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
                   onClick={() => setActiveTab('stats')}
                 >
-                  <span>Estadísticas</span>
+                  <span>Promedios</span>
                 </button>
                 <button
                   type="button"
@@ -261,8 +326,12 @@ export default function App() {
             {activeTab === 'matches' && (
               <MatchesView
                 tournament={tournament}
+                finalMatchResolved={finalMatchResolved}
                 onScoreChange={handleScoreChange}
                 onClearMatch={handleClearMatch}
+                onFinalScoreChange={handleFinalScoreChange}
+                onFinalPairingChange={handleFinalPairingChange}
+                onClearFinal={handleClearFinal}
                 onGoToStats={() => setActiveTab('stats')}
                 autoStartTour={shouldAutoStartMatchesTour(tutorialState)}
                 manualTourTick={matchesTourTick}
@@ -275,6 +344,10 @@ export default function App() {
                 tournament={tournament}
                 standings={standings}
                 summary={summary}
+                finalMatchResolved={finalMatchResolved}
+                onFinalScoreChange={handleFinalScoreChange}
+                onFinalPairingChange={handleFinalPairingChange}
+                onClearFinal={handleClearFinal}
               />
             )}
 
@@ -314,7 +387,7 @@ export default function App() {
             <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
               leaderboard
             </span>
-            <span>Estadísticas</span>
+            <span>Promedios</span>
           </button>
           <button
             type="button"

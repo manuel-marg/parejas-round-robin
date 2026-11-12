@@ -487,6 +487,81 @@ input[type='number'] {
   border-color: var(--primary);
 }
 
+.gender-setup-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.gender-box {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface-alt);
+  min-width: 0;
+}
+
+.gender-box .add-pair-form {
+  margin-top: 10px;
+}
+
+.gender-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gender-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.96rem;
+}
+
+.gender-pill {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gender-pill-m,
+.pair-index-m {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.gender-pill-h,
+.pair-index-h {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.final-card {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+}
+
+.final-pairing-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .gender-setup-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
 .highlight-card {
   background: linear-gradient(135deg, #ecfdf5 0%, #f7fee7 100%);
   border: 1px solid #bbf7d0;

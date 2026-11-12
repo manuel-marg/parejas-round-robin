@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { computeMixedMatchCount } from '../domain/scheduler.js';
 import { startSetupTutorial } from '../domain/tutorial.js';
 
 /**
- * Pantalla inicial para agregar parejas manualmente, configurar el torneo y generar juegos.
+ * Pantalla inicial para registrar mujeres y hombres de forma individual,
+ * configurar canchas/puntaje y generar el rol de parejas rotativas.
  */
 export default function SetupView({
   onStartTournament,
@@ -13,8 +15,10 @@ export default function SetupView({
   onSetupTourComplete,
 }) {
   const [title, setTitle] = useState('Jornada de Pickleball');
-  const [pairs, setPairs] = useState([]);
-  const [newPairName, setNewPairName] = useState('');
+  const [women, setWomen] = useState([]);
+  const [men, setMen] = useState([]);
+  const [newWomanName, setNewWomanName] = useState('');
+  const [newManName, setNewManName] = useState('');
   const [courts, setCourts] = useState(1);
   const [targetPoints, setTargetPoints] = useState(11);
   const [error, setError] = useState('');
@@ -53,41 +57,76 @@ export default function SetupView({
     };
   }, [manualTourTick]);
 
-  const totalMatches = pairs.length >= 2 ? (pairs.length * (pairs.length - 1)) / 2 : 0;
-  const maxCourts = Math.max(1, Math.floor(pairs.length / 2));
+  const canComputeSchedule = women.length >= 2 && men.length >= 2;
+  const totalMatches = canComputeSchedule
+    ? computeMixedMatchCount(men.length, women.length)
+    : 0;
+  const maxCourts = Math.max(
+    1,
+    Math.min(Math.floor(women.length / 2), Math.floor(men.length / 2))
+  );
   const effectiveCourts = Math.min(courts, maxCourts);
 
-  function handleAddPair(e) {
+  const gamesPerWoman = canComputeSchedule ? (totalMatches * 2) / women.length : 0;
+  const gamesPerMan = canComputeSchedule ? (totalMatches * 2) / men.length : 0;
+
+  function handleAddWoman(e) {
     e.preventDefault();
-    const cleaned = newPairName.trim();
+    const cleaned = newWomanName.trim();
     if (!cleaned) return;
-    setPairs((prev) => [...prev, { id: `p-${Date.now()}-${prev.length + 1}`, name: cleaned }]);
-    setNewPairName('');
+    setWomen((prev) => [
+      ...prev,
+      { id: `m-${Date.now()}-${prev.length + 1}`, name: cleaned, gender: 'M' },
+    ]);
+    setNewWomanName('');
     setError('');
   }
 
-  function handleRenamePair(id, value) {
-    setPairs((prev) => prev.map((p) => (p.id === id ? { ...p, name: value } : p)));
+  function handleAddMan(e) {
+    e.preventDefault();
+    const cleaned = newManName.trim();
+    if (!cleaned) return;
+    setMen((prev) => [
+      ...prev,
+      { id: `h-${Date.now()}-${prev.length + 1}`, name: cleaned, gender: 'H' },
+    ]);
+    setNewManName('');
+    setError('');
   }
 
-  function handleRemovePair(id) {
-    setPairs((prev) => prev.filter((p) => p.id !== id));
+  function handleRenameWoman(id, value) {
+    setWomen((prev) => prev.map((p) => (p.id === id ? { ...p, name: value } : p)));
+  }
+
+  function handleRenameMan(id, value) {
+    setMen((prev) => prev.map((p) => (p.id === id ? { ...p, name: value } : p)));
+  }
+
+  function handleRemoveWoman(id) {
+    setWomen((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  function handleRemoveMan(id) {
+    setMen((prev) => prev.filter((p) => p.id !== id));
   }
 
   function handleGenerate() {
-    const validPairs = pairs
-      .map((p) => ({ ...p, name: p.name.trim() }))
+    const validWomen = women
+      .map((p) => ({ ...p, name: p.name.trim(), gender: 'M' }))
+      .filter((p) => p.name.length > 0);
+    const validMen = men
+      .map((p) => ({ ...p, name: p.name.trim(), gender: 'H' }))
       .filter((p) => p.name.length > 0);
 
-    if (validPairs.length < 2) {
-      setError('Debes registrar al menos 2 parejas con nombre antes de generar los juegos.');
+    if (validWomen.length < 2 || validMen.length < 2) {
+      setError('Debes registrar al menos 2 mujeres y 2 hombres con nombre antes de generar los juegos.');
       return;
     }
 
     setError('');
     onStartTournament({
       title: title.trim() || 'Torneo de Pickleball',
-      pairs: validPairs,
+      players: [...validWomen, ...validMen],
       courts: effectiveCourts,
       targetPoints,
     });
@@ -97,61 +136,133 @@ export default function SetupView({
     <div className="setup-grid">
       <section className="card">
         <div>
-          <h2 className="card-title">1. Registrar parejas</h2>
-          <p className="card-subtitle">Agrega manualmente los nombres de cada pareja.</p>
+          <h2 className="card-title">1. Registrar jugadores</h2>
+          <p className="card-subtitle">
+            Agrega a cada persona por separado (mujeres y hombres). En cada juego rotarán de pareja.
+          </p>
         </div>
 
-        <form id="tour-add-pair" onSubmit={handleAddPair} className="add-pair-form">
-          <input
-            id="new-pair-name"
-            name="newPairName"
-            type="text"
-            className="input"
-            aria-label="Nombre de la nueva pareja"
-            placeholder="Ej. Laura / Andrés"
-            value={newPairName}
-            onChange={(e) => setNewPairName(e.target.value)}
-          />
-          <button type="submit" className="btn btn-primary">
-            Agregar
-          </button>
-        </form>
-
-        <div id="tour-pair-list" className="pair-list">
-          {pairs.map((pair, idx) => (
-            <div key={pair.id} className="pair-row">
-              <span className="pair-index">{idx + 1}</span>
-              <input
-                id={`pair-name-${pair.id}`}
-                name={`pairName-${idx + 1}`}
-                type="text"
-                className="pair-name-input"
-                aria-label={`Nombre de la pareja ${idx + 1}`}
-                value={pair.name}
-                onChange={(e) => handleRenamePair(pair.id, e.target.value)}
-              />
-              <button
-                type="button"
-                className="btn btn-danger-soft btn-sm"
-                aria-label={`Eliminar ${pair.name}`}
-                onClick={() => handleRemovePair(pair.id)}
-              >
-                Quitar
-              </button>
+        <div className="gender-setup-sections">
+          <div id="tour-add-women" className="gender-box">
+            <div className="gender-box-header">
+              <span className="gender-title">
+                <span className="gender-pill gender-pill-m">M</span>
+                Mujeres
+              </span>
+              <span className="badge badge-neutral">{women.length} registradas</span>
             </div>
-          ))}
-          {pairs.length === 0 && (
-            <p className="card-subtitle" style={{ padding: '12px 0' }}>
-              No hay parejas todavía. Escribe una arriba y pulsa Agregar (mínimo 2 parejas).
-            </p>
-          )}
+
+            <form onSubmit={handleAddWoman} className="add-pair-form">
+              <input
+                id="new-woman-name"
+                name="newWomanName"
+                type="text"
+                className="input"
+                aria-label="Nombre de la jugadora"
+                placeholder="Ej. Ana"
+                value={newWomanName}
+                onChange={(e) => setNewWomanName(e.target.value)}
+              />
+              <button type="submit" className="btn btn-primary">
+                Agregar
+              </button>
+            </form>
+
+            <div className="pair-list">
+              {women.map((player, idx) => (
+                <div key={player.id} className="pair-row">
+                  <span className="pair-index pair-index-m">M{idx + 1}</span>
+                  <input
+                    id={`player-name-${player.id}`}
+                    name={`womanName-${idx + 1}`}
+                    type="text"
+                    className="pair-name-input"
+                    aria-label={`Nombre de la jugadora ${idx + 1}`}
+                    value={player.name}
+                    onChange={(e) => handleRenameWoman(player.id, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-danger-soft btn-sm"
+                    aria-label={`Eliminar a ${player.name}`}
+                    onClick={() => handleRemoveWoman(player.id)}
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ))}
+              {women.length === 0 && (
+                <p className="card-subtitle" style={{ padding: '6px 0' }}>
+                  Sin mujeres todavía (mínimo 2; ideal 4).
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div id="tour-add-men" className="gender-box">
+            <div className="gender-box-header">
+              <span className="gender-title">
+                <span className="gender-pill gender-pill-h">H</span>
+                Hombres
+              </span>
+              <span className="badge badge-neutral">{men.length} registrados</span>
+            </div>
+
+            <form onSubmit={handleAddMan} className="add-pair-form">
+              <input
+                id="new-man-name"
+                name="newManName"
+                type="text"
+                className="input"
+                aria-label="Nombre del jugador"
+                placeholder="Ej. Carlos"
+                value={newManName}
+                onChange={(e) => setNewManName(e.target.value)}
+              />
+              <button type="submit" className="btn btn-primary">
+                Agregar
+              </button>
+            </form>
+
+            <div className="pair-list">
+              {men.map((player, idx) => (
+                <div key={player.id} className="pair-row">
+                  <span className="pair-index pair-index-h">H{idx + 1}</span>
+                  <input
+                    id={`player-name-${player.id}`}
+                    name={`manName-${idx + 1}`}
+                    type="text"
+                    className="pair-name-input"
+                    aria-label={`Nombre del jugador ${idx + 1}`}
+                    value={player.name}
+                    onChange={(e) => handleRenameMan(player.id, e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-danger-soft btn-sm"
+                    aria-label={`Eliminar a ${player.name}`}
+                    onClick={() => handleRemoveMan(player.id)}
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ))}
+              {men.length === 0 && (
+                <p className="card-subtitle" style={{ padding: '6px 0' }}>
+                  Sin hombres todavía (mínimo 2; ideal 4).
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <section className="card">
           <h2 className="card-title">2. Configuración del torneo</h2>
-          <p className="card-subtitle">Se genera automáticamente el rol de juegos con descansos alternados.</p>
+          <p className="card-subtitle">
+            Se generan las parejas mixtas rotativas y al final las 2 mejores mujeres y los 2 mejores hombres juegan la final.
+          </p>
 
           <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div id="tour-title-field">
@@ -207,8 +318,17 @@ export default function SetupView({
               fontWeight: 600,
             }}
           >
-            {pairs.length} parejas · {totalMatches} partidos todos contra todos ·{' '}
-            {effectiveCourts === 1 ? '1 juego por turno' : `${effectiveCourts} canchas por turno`}
+            {canComputeSchedule ? (
+              <>
+                {women.length} mujeres · {men.length} hombres · {totalMatches} partidos (
+                {gamesPerWoman === gamesPerMan
+                  ? `${gamesPerWoman} por persona`
+                  : `${gamesPerWoman} por mujer / ${gamesPerMan} por hombre`}
+                ) + Gran Final
+              </>
+            ) : (
+              'Registra al menos 2 mujeres y 2 hombres para ver el rol de partidos.'
+            )}
           </div>
 
           {error && (
@@ -233,7 +353,7 @@ export default function SetupView({
             type="button"
             className="btn btn-primary"
             style={{ width: '100%', marginTop: '14px', padding: '12px 16px' }}
-            disabled={pairs.length < 2}
+            disabled={!canComputeSchedule}
             onClick={handleGenerate}
           >
             Generar juegos automáticamente
@@ -264,7 +384,7 @@ export default function SetupView({
                       {item.title}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      {item.pairs.length} parejas · {item.champion ? `Líder: ${item.champion}` : 'En progreso'}
+                      {item.players.length} jugadores · {item.champion ? `Campeón/Líder: ${item.champion}` : 'En progreso'}
                     </div>
                   </div>
                   <button type="button" className="btn btn-soft btn-sm" onClick={() => onLoadHistory(item)}>

@@ -44,12 +44,27 @@ function safeWriteJson(key, value, customStorage) {
   }
 }
 
+export function isValidMixedTournament(data) {
+  return Boolean(
+    data &&
+      Array.isArray(data.players) &&
+      data.players.length >= 4 &&
+      Array.isArray(data.matches) &&
+      data.matches.length > 0 &&
+      data.matches[0]?.teamA &&
+      data.matches[0]?.teamB
+  );
+}
+
 export function loadActiveTournament(customStorage) {
   const data = safeReadJson(ACTIVE_TOURNAMENT_KEY, null, customStorage);
-  if (!data || !Array.isArray(data.pairs) || !Array.isArray(data.matches)) {
+  if (!isValidMixedTournament(data)) {
     return null;
   }
-  return data;
+  return {
+    ...data,
+    finalMatch: data.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
+  };
 }
 
 export function saveActiveTournament(tournament, customStorage) {
@@ -72,20 +87,37 @@ export function saveActiveTournament(tournament, customStorage) {
 
 export function loadTournamentHistory(customStorage) {
   const list = safeReadJson(HISTORY_KEY, [], customStorage);
-  return Array.isArray(list) ? list : [];
+  if (!Array.isArray(list)) return [];
+  return list.filter(isValidMixedTournament);
 }
 
-export function saveTournamentToHistory(tournament, standings, customStorage) {
+export function saveTournamentToHistory(tournament, standings, finalMatchResolved, customStorage) {
   const history = loadTournamentHistory(customStorage);
+  const topWoman = standings?.women?.[0]?.name || null;
+  const topMan = standings?.men?.[0]?.name || null;
+  let championLabel = null;
+
+  if (finalMatchResolved?.completed) {
+    if (finalMatchResolved.winnerSide === 'A') {
+      championLabel = `${finalMatchResolved.teamA.man.name} + ${finalMatchResolved.teamA.woman.name}`;
+    } else if (finalMatchResolved.winnerSide === 'B') {
+      championLabel = `${finalMatchResolved.teamB.man.name} + ${finalMatchResolved.teamB.woman.name}`;
+    }
+  } else if (topWoman && topMan) {
+    championLabel = `${topWoman} / ${topMan}`;
+  }
+
   const entry = {
     id: tournament.id || `hist-${Date.now()}`,
     title: tournament.title || 'Torneo Pickleball',
     savedAt: new Date().toISOString(),
     courts: tournament.courts || 1,
     targetPoints: tournament.targetPoints || 11,
-    pairs: tournament.pairs,
+    players: tournament.players,
     matches: tournament.matches,
-    champion: standings?.[0]?.name || null,
+    finalMatch: tournament.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
+    meta: tournament.meta || null,
+    champion: championLabel,
   };
   const filtered = history.filter((item) => item.id !== entry.id);
   const next = [entry, ...filtered].slice(0, 20);
@@ -159,13 +191,7 @@ export function shouldAutoStartMatchesTour(tutorialState) {
  */
 export function parseImportedTournament(rawText) {
   const parsed = JSON.parse(rawText);
-  if (
-    !parsed ||
-    !Array.isArray(parsed.pairs) ||
-    parsed.pairs.length < 2 ||
-    !Array.isArray(parsed.matches) ||
-    parsed.matches.length === 0
-  ) {
+  if (!isValidMixedTournament(parsed)) {
     throw new Error('El archivo no contiene un torneo válido.');
   }
   return {
@@ -173,28 +199,58 @@ export function parseImportedTournament(rawText) {
     title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : 'Torneo importado',
     courts: Number(parsed.courts) || 1,
     targetPoints: Number(parsed.targetPoints) || 11,
-    pairs: parsed.pairs,
+    players: parsed.players,
     matches: parsed.matches,
+    finalMatch: parsed.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
     meta: parsed.meta || null,
   };
 }
 
+function formatStandingLine(row) {
+  const wonLabel = row.won === 1 ? '1 ganado' : `${row.won} ganados`;
+  const lostLabel = row.lost === 1 ? '1 perdido' : `${row.lost} perdidos`;
+  const tiedPart =
+    row.tied > 0
+      ? `, ${row.tied === 1 ? '1 empatado' : `${row.tied} empatados`}`
+      : '';
+  const diffLabel = row.pointDiff > 0 ? `+${row.pointDiff}` : `${row.pointDiff}`;
+  const avgLabel = row.played > 0 ? row.avgPointsFor.toFixed(1) : '0.0';
+  return `${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart} · Dif ${diffLabel} · Prom ${avgLabel}`;
+}
+
 /**
- * Formatea la tabla de posiciones en una lista precisa lista para enviar por WhatsApp.
+ * Formatea los promedios individuales (mujeres primero y luego hombres) y la Gran Final
+ * en una lista precisa lista para enviar por WhatsApp.
  */
-export function formatShareableSummary(tournament, standings) {
+export function formatShareableSummary(tournament, standings, finalMatchResolved) {
   const title = tournament?.title?.trim() || 'Torneo de Pickleball';
   const lines = [`*${title}*`, ''];
 
-  standings.forEach((row) => {
-    const wonLabel = row.won === 1 ? '1 ganado' : `${row.won} ganados`;
-    const lostLabel = row.lost === 1 ? '1 perdido' : `${row.lost} perdidos`;
-    const tiedPart =
-      row.tied > 0
-        ? `, ${row.tied === 1 ? '1 empatado' : `${row.tied} empatados`}`
-        : '';
-    lines.push(`${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart}`);
+  lines.push('*Mujeres*');
+  (standings?.women || []).forEach((row) => {
+    lines.push(formatStandingLine(row));
   });
+
+  lines.push('');
+  lines.push('*Hombres*');
+  (standings?.men || []).forEach((row) => {
+    lines.push(formatStandingLine(row));
+  });
+
+  if (finalMatchResolved?.completed) {
+    const teamALabel = `${finalMatchResolved.teamA.man.name} + ${finalMatchResolved.teamA.woman.name}`;
+    const teamBLabel = `${finalMatchResolved.teamB.man.name} + ${finalMatchResolved.teamB.woman.name}`;
+    lines.push('');
+    lines.push('*Gran Final*');
+    lines.push(`${teamALabel} (${finalMatchResolved.scoreA}) vs (${finalMatchResolved.scoreB}) ${teamBLabel}`);
+    if (finalMatchResolved.winnerSide === 'A') {
+      lines.push(`Campeones: ${teamALabel}`);
+    } else if (finalMatchResolved.winnerSide === 'B') {
+      lines.push(`Campeones: ${teamBLabel}`);
+    } else {
+      lines.push('Resultado: Empate');
+    }
+  }
 
   return lines.join('\n');
 }

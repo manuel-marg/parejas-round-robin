@@ -2,30 +2,44 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { isMatchCompleted } from '../domain/stats.js';
 import { startMatchesTutorial } from '../domain/tutorial.js';
 import MatchCard from './MatchCard.jsx';
+import FinalMatchCard from './FinalMatchCard.jsx';
 
 /**
- * Vista principal de juegos: resalta el próximo turno/descanso, permite llenar puntajes
- * y habilita acceso directo a estadísticas finales al completar todos los partidos.
+ * Vista principal de juegos: resalta el próximo turno/descanso, permite filtrar por jugador,
+ * llenar puntajes y disputar la Gran Final al concluir la fase clasificatoria.
  */
 export default function MatchesView({
   tournament,
+  finalMatchResolved,
   onScoreChange,
   onClearMatch,
+  onFinalScoreChange,
+  onFinalPairingChange,
+  onClearFinal,
   onGoToStats,
   autoStartTour = false,
   manualTourTick = 0,
   onMatchesTourComplete,
 }) {
   const [filter, setFilter] = useState('all');
-  const [pairFilter, setPairFilter] = useState('all');
+  const [playerFilter, setPlayerFilter] = useState('all');
 
   const driverRef = useRef(null);
   const onTourCompleteRef = useRef(onMatchesTourComplete);
   onTourCompleteRef.current = onMatchesTourComplete;
 
-  const pairMap = useMemo(
-    () => new Map(tournament.pairs.map((p) => [p.id, p.name])),
-    [tournament.pairs]
+  const playerMap = useMemo(
+    () => new Map(tournament.players.map((p) => [p.id, p.name])),
+    [tournament.players]
+  );
+
+  const womenPlayers = useMemo(
+    () => tournament.players.filter((p) => p.gender === 'M'),
+    [tournament.players]
+  );
+  const menPlayers = useMemo(
+    () => tournament.players.filter((p) => p.gender === 'H'),
+    [tournament.players]
   );
 
   const pendingMatches = useMemo(
@@ -53,7 +67,7 @@ export default function MatchesView({
   useEffect(() => {
     if (manualTourTick === 0) return undefined;
     setFilter('all');
-    setPairFilter('all');
+    setPlayerFilter('all');
     const timer = window.setTimeout(() => {
       driverRef.current = startMatchesTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
@@ -78,12 +92,23 @@ export default function MatchesView({
       const done = isMatchCompleted(m);
       if (filter === 'pending' && done) return false;
       if (filter === 'completed' && !done) return false;
-      if (pairFilter !== 'all' && m.pairAId !== pairFilter && m.pairBId !== pairFilter) {
-        return false;
+      if (playerFilter !== 'all') {
+        const inMatch =
+          m.teamA.manId === playerFilter ||
+          m.teamA.womanId === playerFilter ||
+          m.teamB.manId === playerFilter ||
+          m.teamB.womanId === playerFilter;
+        if (!inMatch) return false;
       }
       return true;
     });
-  }, [tournament.matches, filter, pairFilter]);
+  }, [tournament.matches, filter, playerFilter]);
+
+  function formatMatchLabel(m) {
+    const labelA = `${playerMap.get(m.teamA.manId)} + ${playerMap.get(m.teamA.womanId)}`;
+    const labelB = `${playerMap.get(m.teamB.manId)} + ${playerMap.get(m.teamB.womanId)}`;
+    return `${tournament.courts > 1 ? `Cancha ${m.court}: ` : ''}${labelA} vs ${labelB}`;
+  }
 
   return (
     <div>
@@ -95,19 +120,14 @@ export default function MatchesView({
                 En cancha ahora · {tournament.courts > 1 ? `Turno ${nextSlotMatches[0].slot}` : `Juego #${nextSlotMatches[0].gameNumber}`}
               </span>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)' }}>
-                {nextSlotMatches
-                  .map(
-                    (m) =>
-                      `${tournament.courts > 1 ? `Cancha ${m.court}: ` : ''}${pairMap.get(m.pairAId)} vs ${pairMap.get(m.pairBId)}`
-                  )
-                  .join('  |  ')}
+                {nextSlotMatches.map(formatMatchLabel).join('  |  ')}
               </div>
               <div style={{ fontSize: '0.86rem', color: 'var(--text-muted)', marginTop: '3px' }}>
                 {(nextSlotMatches[0].restingIds || []).length > 0
                   ? `Descansan en este turno: ${nextSlotMatches[0].restingIds
-                      .map((id) => pairMap.get(id))
+                      .map((id) => playerMap.get(id))
                       .join(', ')}`
-                  : 'Todas las parejas están jugando en este turno.'}
+                  : 'Todos los jugadores están en cancha en este turno.'}
               </div>
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
@@ -116,21 +136,31 @@ export default function MatchesView({
           </div>
         </section>
       ) : (
-        <section id="tour-current-court" className="highlight-card">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-            <div>
-              <span className="badge badge-success" style={{ marginBottom: '4px' }}>
-                Torneo completado
-              </span>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>
-                Todos los {tournament.matches.length} juegos tienen marcador registrado.
+        <>
+          <section id="tour-current-court" className="highlight-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+              <div>
+                <span className="badge badge-success" style={{ marginBottom: '4px' }}>
+                  Fase clasificatoria completada
+                </span>
+                <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>
+                  Todos los {tournament.matches.length} juegos tienen marcador. ¡Hora de la Gran Final!
+                </div>
               </div>
+              <button type="button" className="btn btn-primary" onClick={onGoToStats}>
+                Ver promedios y tabla
+              </button>
             </div>
-            <button type="button" className="btn btn-primary" onClick={onGoToStats}>
-              Ver estadísticas finales
-            </button>
-          </div>
-        </section>
+          </section>
+
+          <FinalMatchCard
+            finalMatchResolved={finalMatchResolved}
+            isQualifyingFinished={allCompleted}
+            onFinalScoreChange={onFinalScoreChange}
+            onFinalPairingChange={onFinalPairingChange}
+            onClearFinal={onClearFinal}
+          />
+        </>
       )}
 
       <div className="filter-toolbar">
@@ -159,19 +189,28 @@ export default function MatchesView({
         </div>
 
         <select
-          id="pair-filter"
-          name="pairFilter"
+          id="player-filter"
+          name="playerFilter"
           className="select pair-filter-select"
-          aria-label="Filtrar por pareja"
-          value={pairFilter}
-          onChange={(e) => setPairFilter(e.target.value)}
+          aria-label="Filtrar por jugador"
+          value={playerFilter}
+          onChange={(e) => setPlayerFilter(e.target.value)}
         >
-          <option value="all">Todas las parejas</option>
-          {tournament.pairs.map((pair) => (
-            <option key={pair.id} value={pair.id}>
-              {pair.name}
-            </option>
-          ))}
+          <option value="all">Todos los jugadores</option>
+          <optgroup label="Mujeres">
+            {womenPlayers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Hombres">
+            {menPlayers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </optgroup>
         </select>
       </div>
 
@@ -185,7 +224,7 @@ export default function MatchesView({
             <MatchCard
               key={match.id}
               match={match}
-              pairMap={pairMap}
+              playerMap={playerMap}
               courts={tournament.courts}
               onScoreChange={onScoreChange}
               onClearMatch={onClearMatch}
@@ -198,10 +237,12 @@ export default function MatchesView({
         <section className="bottom-stats-cta">
           <div>
             <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
-              ¡Listo! Ya llenaste todos los juegos
+              {finalMatchResolved?.completed
+                ? '¡Torneo y Gran Final completados!'
+                : '¡Listo! Ya llenaste todos los juegos clasificatorios'}
             </div>
             <div style={{ fontSize: '0.86rem', color: 'var(--text-muted)' }}>
-              Consulta la tabla final de posiciones y compártela por WhatsApp.
+              Consulta los promedios individuales (mujeres y hombres) y compártelos por WhatsApp.
             </div>
           </div>
           <button
@@ -210,7 +251,7 @@ export default function MatchesView({
             style={{ width: '100%', maxWidth: '300px' }}
             onClick={onGoToStats}
           >
-            Ver estadísticas finales
+            Ver promedios finales
           </button>
         </section>
       )}

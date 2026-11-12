@@ -13,6 +13,9 @@ export default function HistoryView({
   onResetScores,
   onNewTournament,
 }) {
+  const womenCount = tournament.players.filter((p) => p.gender === 'M').length;
+  const menCount = tournament.players.filter((p) => p.gender === 'H').length;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <section className="card">
@@ -29,7 +32,7 @@ export default function HistoryView({
             type="button"
             className="btn btn-secondary"
             onClick={() => {
-              if (window.confirm('¿Borrar todos los puntajes ingresados y dejar los juegos pendientes?')) {
+              if (window.confirm('¿Borrar todos los puntajes ingresados (incluyendo la Gran Final) y dejar los juegos pendientes?')) {
                 onResetScores();
               }
             }}
@@ -49,16 +52,13 @@ export default function HistoryView({
               }
             }}
           >
-            Nuevo torneo / Cambiar parejas
+            Nuevo torneo / Cambiar jugadores
           </button>
         </div>
 
         <div style={{ marginTop: '14px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <strong>Resumen del calendario:</strong> {tournament.pairs.length} parejas ·{' '}
-          {tournament.matches.length} partidos · {tournament.courts} cancha(s) ·{' '}
-          {tournament.meta?.backToBackTransitions === 0
-            ? '0 partidos seguidos (descanso ideal garantizado)'
-            : `${tournament.meta?.backToBackTransitions ?? 0} cruce(s) consecutivo(s) mínimos posibles`}
+          <strong>Resumen del calendario:</strong> {womenCount} mujeres · {menCount} hombres ·{' '}
+          {tournament.matches.length} partidos + Gran Final · {tournament.courts} cancha(s)
         </div>
       </section>
 
@@ -102,8 +102,8 @@ export default function HistoryView({
                   <div>
                     <div style={{ fontWeight: 700 }}>{item.title}</div>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                      {dateLabel} · {item.pairs.length} parejas · {done}/{item.matches.length} juegos
-                      {item.champion ? ` · Líder: ${item.champion}` : ''}
+                      {dateLabel} · {item.players.length} jugadores · {done}/{item.matches.length} juegos
+                      {item.champion ? ` · Líder/Campeones: ${item.champion}` : ''}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
