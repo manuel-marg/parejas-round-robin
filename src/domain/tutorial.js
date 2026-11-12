@@ -113,7 +113,7 @@ export function startMatchesTutorial({ onComplete } = {}) {
       popover: {
         title: 'En cancha ahora',
         description:
-          'Aquí ves qué parejas mixtas juegan en este momento y qué personas descansan mientras tanto.',
+          'Aquí ves qué parejas mixtas juegan en este momento.',
         side: 'bottom',
         align: 'start',
       },

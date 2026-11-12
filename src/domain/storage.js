@@ -213,9 +213,7 @@ function formatStandingLine(row) {
     row.tied > 0
       ? `, ${row.tied === 1 ? '1 empatado' : `${row.tied} empatados`}`
       : '';
-  const diffLabel = row.pointDiff > 0 ? `+${row.pointDiff}` : `${row.pointDiff}`;
-  const avgLabel = row.played > 0 ? row.avgPointsFor.toFixed(1) : '0.0';
-  return `${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart} · Dif ${diffLabel} · Prom ${avgLabel}`;
+  return `${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart}`;
 }
 
 /**

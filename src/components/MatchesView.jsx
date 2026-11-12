@@ -124,13 +124,6 @@ export default function MatchesView({
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)' }}>
                 {nextSlotMatches.map(formatMatchLabel).join('  |  ')}
               </div>
-              <div style={{ fontSize: '0.86rem', color: 'var(--text-muted)', marginTop: '3px' }}>
-                {(nextSlotMatches[0].restingIds || []).length > 0
-                  ? `Descansan en este turno: ${nextSlotMatches[0].restingIds
-                      .map((id) => playerMap.get(id))
-                      .join(', ')}`
-                  : 'Todos los jugadores están en cancha en este turno.'}
-              </div>
             </div>
             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
               {completedCount} / {totalMatches} juegos listos

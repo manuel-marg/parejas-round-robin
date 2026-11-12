@@ -293,6 +293,8 @@ test('storage guarda y recupera torneo mixto, ignora formato antiguo, y formatea
   const finalPos = text.indexOf('*Gran Final*');
   assert.ok(womenPos !== -1 && menPos !== -1 && womenPos < menPos);
   assert.ok(finalPos > menPos);
+  assert.equal(text.includes('Dif'), false, 'No debe incluir Dif en el mensaje corto de WhatsApp');
+  assert.equal(text.includes('Prom'), false, 'No debe incluir Prom en el mensaje corto de WhatsApp');
 
   const afterDelete = deleteHistoryEntry('torneo-mixto-1', storage);
   assert.equal(afterDelete.length, 0);

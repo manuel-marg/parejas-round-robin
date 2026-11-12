@@ -14,7 +14,6 @@ export default function MatchCard({ match, playerMap, courts, onScoreChange, onC
 
   const labelA = `${manA} + ${womanA}`;
   const labelB = `${manB} + ${womanB}`;
-  const restingNames = (match.restingIds || []).map((id) => playerMap.get(id) || id);
 
   const aWon = completed && match.scoreA > match.scoreB;
   const bWon = completed && match.scoreB > match.scoreA;
@@ -59,20 +58,17 @@ export default function MatchCard({ match, playerMap, courts, onScoreChange, onC
         />
       </div>
 
-      <div className="match-footer">
-        <span className="resting-text">
-          {restingNames.length > 0 ? `Descansan: ${restingNames.join(', ')}` : 'Todos juegan en este turno'}
-        </span>
-        {(match.scoreA !== null || match.scoreB !== null) && (
+      {(match.scoreA !== null || match.scoreB !== null) && (
+        <div className="match-footer" style={{ justifyContent: 'flex-end', paddingTop: '6px' }}>
           <button
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={() => onClearMatch(match.id)}
           >
-            Limpiar
+            Limpiar marcador
           </button>
-        )}
-      </div>
+        </div>
+      )}
     </article>
   );
 }
