@@ -36,9 +36,6 @@ function runTour(steps, onComplete) {
   const driverObj = driver({
     ...BASE_DRIVER_CONFIG,
     steps,
-    onDestroyStarted: (_element, _step, opts) => {
-      finish(opts?.reason);
-    },
     onDestroyed: (_element, _step, opts) => {
       finish(opts?.reason);
     },

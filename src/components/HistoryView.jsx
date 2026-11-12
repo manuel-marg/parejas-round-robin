@@ -23,24 +23,43 @@ export default function HistoryView({
   const womenCount = tournament.players.filter((p) => p.gender === 'M').length;
   const menCount = tournament.players.filter((p) => p.gender === 'H').length;
 
+  const lastManualTickRef = useRef(0);
+
   useEffect(() => {
-    if (manualTourTick === 0 && !autoStartTour) {
-      return undefined;
-    }
-    const delay = manualTourTick > 0 ? 80 : 300;
+    if (!autoStartTour) return undefined;
     const timer = window.setTimeout(() => {
       driverRef.current?.destroy();
       driverRef.current = startHistoryTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
-    }, delay);
+    }, 300);
 
     return () => {
       window.clearTimeout(timer);
       driverRef.current?.destroy();
       driverRef.current = null;
     };
-  }, [autoStartTour, manualTourTick]);
+  }, [autoStartTour]);
+
+  useEffect(() => {
+    if (manualTourTick === 0 || manualTourTick === lastManualTickRef.current) {
+      return undefined;
+    }
+    lastManualTickRef.current = manualTourTick;
+
+    const timer = window.setTimeout(() => {
+      driverRef.current?.destroy();
+      driverRef.current = startHistoryTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

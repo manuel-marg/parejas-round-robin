@@ -51,28 +51,46 @@ export default function MatchesView({
   const progressPct = totalMatches > 0 ? Math.round((completedCount / totalMatches) * 100) : 0;
   const allCompleted = totalMatches > 0 && pendingMatches.length === 0;
 
+  const lastManualTickRef = useRef(0);
+
   useEffect(() => {
-    if (manualTourTick === 0 && (!autoStartTour || allCompleted)) {
-      return undefined;
-    }
-    if (manualTourTick > 0) {
-      setFilter('all');
-      setPlayerFilter('all');
-    }
-    const delay = manualTourTick > 0 ? 80 : 300;
+    if (!autoStartTour || allCompleted) return undefined;
     const timer = window.setTimeout(() => {
       driverRef.current?.destroy();
       driverRef.current = startMatchesTutorial({
         onComplete: () => onTourCompleteRef.current?.(),
       });
-    }, delay);
+    }, 300);
 
     return () => {
       window.clearTimeout(timer);
       driverRef.current?.destroy();
       driverRef.current = null;
     };
-  }, [autoStartTour, manualTourTick, allCompleted]);
+  }, [autoStartTour, allCompleted]);
+
+  useEffect(() => {
+    if (manualTourTick === 0 || manualTourTick === lastManualTickRef.current) {
+      return undefined;
+    }
+    lastManualTickRef.current = manualTourTick;
+
+    setFilter('all');
+    setPlayerFilter('all');
+
+    const timer = window.setTimeout(() => {
+      driverRef.current?.destroy();
+      driverRef.current = startMatchesTutorial({
+        onComplete: () => onTourCompleteRef.current?.(),
+      });
+    }, 80);
+
+    return () => {
+      window.clearTimeout(timer);
+      driverRef.current?.destroy();
+      driverRef.current = null;
+    };
+  }, [manualTourTick]);
 
   const nextSlotMatches = useMemo(() => {
     if (pendingMatches.length === 0) return [];
