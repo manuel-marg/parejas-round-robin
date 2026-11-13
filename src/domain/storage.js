@@ -120,6 +120,7 @@ export function saveTournamentToHistory(tournament, standings, finalMatchResolve
     savedAt: new Date().toISOString(),
     courts: tournament.courts || 1,
     targetPoints: tournament.targetPoints || 11,
+    rounds: tournament.rounds || tournament.meta?.rounds || 1,
     players: tournament.players,
     matches: tournament.matches,
     finalMatch: tournament.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
@@ -254,6 +255,7 @@ export function parseImportedTournament(rawText) {
     title: typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : 'Torneo importado',
     courts: Number(parsed.courts) || 1,
     targetPoints: Number(parsed.targetPoints) || 11,
+    rounds: Number(parsed.rounds) || Number(parsed.meta?.rounds) || 1,
     players: parsed.players,
     matches: parsed.matches,
     finalMatch: parsed.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
@@ -276,7 +278,8 @@ function formatStandingLine(row) {
  * en una lista precisa lista para enviar por WhatsApp.
  */
 export function formatShareableSummary(tournament, standings, finalMatchResolved) {
-  const title = tournament?.title?.trim() || 'Torneo de Pickleball';
+  const roundsSuffix = tournament?.rounds === 2 ? ' (2 Rondas)' : '';
+  const title = `${tournament?.title?.trim() || 'Torneo de Pickleball'}${roundsSuffix}`;
   const lines = [`*${title}*`, ''];
 
   lines.push('*Mujeres*');

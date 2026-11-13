@@ -46,18 +46,25 @@ function lcm(a, b) {
 /**
  * Calcula la cantidad óptima de partidos para H hombres y M mujeres
  * cubriendo todas las combinaciones H×M y equilibrando juegos por género.
+ * Opcionalmente multiplica por la cantidad de rondas (1 o 2).
  */
-export function computeMixedMatchCount(menCount, womenCount) {
-  if (menCount === 4 && womenCount === 4) return 8;
-  if (menCount === 2 && womenCount === 2) return 2;
-
-  const minAppearances = menCount * womenCount;
-  const period = lcm(menCount, womenCount);
-  let totalMatches = Math.ceil(minAppearances / 2);
-  while ((2 * totalMatches) % period !== 0) {
-    totalMatches++;
+export function computeMixedMatchCount(menCount, womenCount, rounds = 1) {
+  const effectiveRounds = Number(rounds) === 2 ? 2 : 1;
+  let baseMatches;
+  if (menCount === 4 && womenCount === 4) {
+    baseMatches = 8;
+  } else if (menCount === 2 && womenCount === 2) {
+    baseMatches = 2;
+  } else {
+    const minAppearances = menCount * womenCount;
+    const period = lcm(menCount, womenCount);
+    baseMatches = Math.ceil(minAppearances / 2);
+    while ((2 * baseMatches) % period !== 0) {
+      baseMatches++;
+    }
   }
-  return totalMatches;
+
+  return baseMatches * effectiveRounds;
 }
 
 /**
@@ -299,9 +306,10 @@ function countBackToBackTransitions(slots) {
 /**
  * Genera el calendario de partidos mixtos con parejas rotativas.
  * Para 4 hombres y 4 mujeres usa la estructura exacta de 8 partidos sin repetir compañero.
+ * Si se solicitan 2 rondas, repite los partidos a continuación de la primera ronda.
  *
  * @param {Array<{ id: string, name: string, gender: 'M' | 'H' }>} players
- * @param {{ courts?: number }} [options]
+ * @param {{ courts?: number, rounds?: number }} [options]
  */
 export function generateMixedRoundRobinSchedule(players, options = {}) {
   if (!Array.isArray(players)) {
@@ -323,72 +331,79 @@ export function generateMixedRoundRobinSchedule(players, options = {}) {
     ? Math.trunc(Number(options.courts))
     : 1;
   const effectiveCourts = Math.min(Math.max(1, requestedCourts), maxUsefulCourts);
+  const rounds = Number(options.rounds) === 2 ? 2 : 1;
 
-  let slots;
+  let baseSlots;
   if (men.length === 4 && women.length === 4) {
     if (effectiveCourts >= 2) {
-      slots = [
+      baseSlots = [
         [PRESET_4X4_MATCHES[0], PRESET_4X4_MATCHES[1]],
         [PRESET_4X4_MATCHES[2], PRESET_4X4_MATCHES[3]],
         [PRESET_4X4_MATCHES[4], PRESET_4X4_MATCHES[5]],
         [PRESET_4X4_MATCHES[6], PRESET_4X4_MATCHES[7]],
       ];
     } else {
-      slots = PRESET_4X4_MATCHES.map((m) => [m]);
+      baseSlots = PRESET_4X4_MATCHES.map((m) => [m]);
     }
   } else if (men.length === 2 && women.length === 2) {
-    slots = PRESET_2X2_MATCHES.map((m) => [m]);
+    baseSlots = PRESET_2X2_MATCHES.map((m) => [m]);
   } else {
-    const totalMatches = computeMixedMatchCount(men.length, women.length);
-    const rawMatches = pairIntoMatches(men.length, women.length, totalMatches);
-    slots = scheduleMixedSlots(rawMatches, effectiveCourts);
+    const singleRoundMatches = computeMixedMatchCount(men.length, women.length, 1);
+    const rawMatches = pairIntoMatches(men.length, women.length, singleRoundMatches);
+    baseSlots = scheduleMixedSlots(rawMatches, effectiveCourts);
   }
 
   const matches = [];
   let gameCounter = 1;
+  let slotCounter = 1;
 
-  slots.forEach((slotMatches, slotIndex) => {
-    const activeIds = new Set();
-    slotMatches.forEach(([teamA, teamB]) => {
-      activeIds.add(men[teamA[0]].id);
-      activeIds.add(women[teamA[1]].id);
-      activeIds.add(men[teamB[0]].id);
-      activeIds.add(women[teamB[1]].id);
-    });
-
-    const restingIds = players.filter((p) => !activeIds.has(p.id)).map((p) => p.id);
-
-    slotMatches.forEach(([teamA, teamB], courtIdx) => {
-      matches.push({
-        id: `game-${gameCounter}`,
-        gameNumber: gameCounter,
-        slot: slotIndex + 1,
-        court: courtIdx + 1,
-        teamA: {
-          manId: men[teamA[0]].id,
-          womanId: women[teamA[1]].id,
-        },
-        teamB: {
-          manId: men[teamB[0]].id,
-          womanId: women[teamB[1]].id,
-        },
-        restingIds,
-        scoreA: null,
-        scoreB: null,
+  for (let r = 1; r <= rounds; r++) {
+    baseSlots.forEach((slotMatches) => {
+      const activeIds = new Set();
+      slotMatches.forEach(([teamA, teamB]) => {
+        activeIds.add(men[teamA[0]].id);
+        activeIds.add(women[teamA[1]].id);
+        activeIds.add(men[teamB[0]].id);
+        activeIds.add(women[teamB[1]].id);
       });
-      gameCounter++;
+
+      const restingIds = players.filter((p) => !activeIds.has(p.id)).map((p) => p.id);
+
+      slotMatches.forEach(([teamA, teamB], courtIdx) => {
+        matches.push({
+          id: `game-${gameCounter}`,
+          gameNumber: gameCounter,
+          round: r,
+          slot: slotCounter,
+          court: courtIdx + 1,
+          teamA: {
+            manId: men[teamA[0]].id,
+            womanId: women[teamA[1]].id,
+          },
+          teamB: {
+            manId: men[teamB[0]].id,
+            womanId: women[teamB[1]].id,
+          },
+          restingIds,
+          scoreA: null,
+          scoreB: null,
+        });
+        gameCounter++;
+      });
+      slotCounter++;
     });
-  });
+  }
 
   return {
     matches,
     meta: {
       menCount: men.length,
       womenCount: women.length,
+      rounds,
       totalMatches: matches.length,
-      totalSlots: slots.length,
+      totalSlots: slotCounter - 1,
       courts: effectiveCourts,
-      backToBackTransitions: countBackToBackTransitions(slots),
+      backToBackTransitions: countBackToBackTransitions(baseSlots) * rounds,
     },
   };
 }

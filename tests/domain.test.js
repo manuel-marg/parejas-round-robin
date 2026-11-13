@@ -386,3 +386,60 @@ test('activateHelpSession activa la guía para la fecha actual y solo se muestra
   assert.equal(isHelpActiveForToday(pastSession), false);
   assert.equal(shouldAutoStartStatsTour(pastSession), false);
 });
+
+test('generateMixedRoundRobinSchedule a 2 rondas genera exactamente el doble de partidos consecutivos', () => {
+  const players = makePlayers(4, 4);
+
+  // Conteo de partidos para 1 y 2 rondas
+  assert.equal(computeMixedMatchCount(4, 4, 1), 8);
+  assert.equal(computeMixedMatchCount(4, 4, 2), 16);
+
+  // Generación a 2 rondas con 2 canchas
+  const { matches, meta } = generateMixedRoundRobinSchedule(players, { courts: 2, rounds: 2 });
+
+  assert.equal(matches.length, 16);
+  assert.equal(meta.rounds, 2);
+  assert.equal(meta.totalSlots, 8); // 4 turnos Ronda 1 + 4 turnos Ronda 2
+  assert.equal(meta.courts, 2);
+
+  // Primeros 8 partidos corresponden a la Ronda 1 (turnos 1..4)
+  const round1 = matches.filter((m) => m.round === 1);
+  const round2 = matches.filter((m) => m.round === 2);
+  assert.equal(round1.length, 8);
+  assert.equal(round2.length, 8);
+
+  // Los partidos de la Ronda 2 repiten exactamente los cruces de la Ronda 1
+  for (let i = 0; i < 8; i++) {
+    const m1 = round1[i];
+    const m2 = round2[i];
+    assert.equal(m1.gameNumber, i + 1);
+    assert.equal(m2.gameNumber, i + 9);
+    assert.equal(m2.slot, m1.slot + 4);
+    assert.equal(m2.court, m1.court);
+    assert.deepEqual(m2.teamA, m1.teamA);
+    assert.deepEqual(m2.teamB, m1.teamB);
+    assert.deepEqual(m2.restingIds, m1.restingIds);
+  }
+
+  // Cada jugador juega exactamente 8 partidos en total
+  const gameCounts = new Map(players.map((p) => [p.id, 0]));
+  for (const m of matches) {
+    for (const pid of [m.teamA.manId, m.teamA.womanId, m.teamB.manId, m.teamB.womanId]) {
+      gameCounts.set(pid, gameCounts.get(pid) + 1);
+    }
+  }
+  for (const count of gameCounts.values()) {
+    assert.equal(count, 8);
+  }
+
+  // Verificar que standings calcule 8 PJ por jugador cuando se completan
+  const completedAll = matches.map((m) => ({
+    ...m,
+    scoreA: 11,
+    scoreB: 8,
+  }));
+  const standings = computeIndividualStandings(players, completedAll);
+  for (const row of standings.all) {
+    assert.equal(row.played, 8);
+  }
+});

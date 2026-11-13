@@ -82,13 +82,14 @@ export default function App() {
     }
   }, [summary.isFinished, tutorialState.tournamentCompleted]);
 
-  function handleStartTournament({ title, players, courts, targetPoints }) {
-    const { matches, meta } = generateMixedRoundRobinSchedule(players, { courts });
+  function handleStartTournament({ title, players, courts, targetPoints, rounds = 1 }) {
+    const { matches, meta } = generateMixedRoundRobinSchedule(players, { courts, rounds });
     setTournament({
       id: `torneo-${Date.now()}`,
       title,
       courts: meta.courts,
       targetPoints,
+      rounds: meta.rounds || rounds || 1,
       players,
       matches,
       finalMatch: {
@@ -196,6 +197,7 @@ export default function App() {
       title: entry.title,
       courts: entry.courts || 1,
       targetPoints: entry.targetPoints || 11,
+      rounds: entry.rounds || entry.meta?.rounds || 1,
       players: entry.players,
       matches: entry.matches,
       finalMatch: entry.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
@@ -274,7 +276,8 @@ export default function App() {
                 {tournament.title && tournament.title !== 'Pickleball' && (
                   <strong>{tournament.title} · </strong>
                 )}
-                {womenCount} {womenCount === 1 ? 'mujer' : 'mujeres'} · {menCount} {menCount === 1 ? 'hombre' : 'hombres'} · {summary.completedMatches} de {summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
+                {womenCount} {womenCount === 1 ? 'mujer' : 'mujeres'} · {menCount} {menCount === 1 ? 'hombre' : 'hombres'}
+                {tournament.rounds === 2 ? ' · 2 rondas' : ''} · {summary.completedMatches} de {summary.totalMatches} juegos · A {tournament.targetPoints || 11} pts
               </p>
             </div>
           )}

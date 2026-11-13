@@ -5,7 +5,14 @@ import TeamScoreRow from './TeamScoreRow.jsx';
 /**
  * Tarjeta de partido individual con parejas mixtas rotativas y lista de descanso.
  */
-export default function MatchCard({ match, playerMap, courts, onScoreChange, onClearMatch }) {
+export default function MatchCard({
+  match,
+  playerMap,
+  courts,
+  showRoundBadge = false,
+  onScoreChange,
+  onClearMatch,
+}) {
   const completed = isMatchCompleted(match);
   const manA = playerMap.get(match.teamA.manId) || match.teamA.manId;
   const womanA = playerMap.get(match.teamA.womanId) || match.teamA.womanId;
@@ -24,6 +31,11 @@ export default function MatchCard({ match, playerMap, courts, onScoreChange, onC
       <div className="match-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: '0.94rem' }}>Juego #{match.gameNumber}</span>
+          {showRoundBadge && match.round && (
+            <span className="badge badge-primary">
+              Ronda {match.round}
+            </span>
+          )}
           {courts > 1 && (
             <span className="badge badge-neutral">
               Turno {match.slot} · Cancha {match.court}

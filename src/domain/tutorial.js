@@ -90,9 +90,9 @@ export function startSetupTutorial({ onComplete } = {}) {
     {
       element: '#tour-match-rules',
       popover: {
-        title: '4. Canchas y puntaje',
+        title: '4. Rondas, canchas y puntaje',
         description:
-          'Elige 1 cancha (turnos secuenciales) o 2 canchas simultáneas, y selecciona el puntaje de referencia (11, 15 o 21).',
+          'Elige 1 o 2 rondas (doble vuelta), selecciona 1 cancha o 2 canchas simultáneas, y define el puntaje de referencia (11, 15 o 21).',
         side: 'top',
         align: 'start',
       },

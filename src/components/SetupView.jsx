@@ -21,6 +21,7 @@ export default function SetupView({
   const [newManName, setNewManName] = useState('');
   const [courts, setCourts] = useState(1);
   const [targetPoints, setTargetPoints] = useState(11);
+  const [rounds, setRounds] = useState(1);
   const [error, setError] = useState('');
 
   const driverRef = useRef(null);
@@ -66,9 +67,10 @@ export default function SetupView({
   }, [manualTourTick]);
 
   const canComputeSchedule = women.length >= 2 && men.length >= 2;
-  const totalMatches = canComputeSchedule
-    ? computeMixedMatchCount(men.length, women.length)
+  const singleRoundMatches = canComputeSchedule
+    ? computeMixedMatchCount(men.length, women.length, 1)
     : 0;
+  const totalMatches = singleRoundMatches * rounds;
   const maxCourts = Math.max(
     1,
     Math.min(Math.floor(women.length / 2), Math.floor(men.length / 2))
@@ -137,6 +139,7 @@ export default function SetupView({
       players: [...validWomen, ...validMen],
       courts: effectiveCourts,
       targetPoints,
+      rounds,
     });
   }
 
@@ -290,6 +293,19 @@ export default function SetupView({
 
             <div id="tour-match-rules" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div>
+                <label className="label" htmlFor="rounds-select">Rondas a disputar</label>
+                <select
+                  id="rounds-select"
+                  className="select"
+                  value={rounds}
+                  onChange={(e) => setRounds(Number(e.target.value))}
+                >
+                  <option value={1}>1 ronda (todos contra todos rotativo)</option>
+                  <option value={2}>2 rondas (doble vuelta, se repiten los partidos)</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="label" htmlFor="courts-select">Canchas disponibles al mismo tiempo</label>
                 <select
                   id="courts-select"
@@ -333,6 +349,7 @@ export default function SetupView({
             {canComputeSchedule ? (
               <>
                 {women.length} mujeres · {men.length} hombres · {totalMatches} partidos (
+                {rounds === 2 ? `2 rondas de ${singleRoundMatches} · ` : ''}
                 {gamesPerWoman === gamesPerMan
                   ? `${gamesPerWoman} por persona`
                   : `${gamesPerWoman} por mujer / ${gamesPerMan} por hombre`}

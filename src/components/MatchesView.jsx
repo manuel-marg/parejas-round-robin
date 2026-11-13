@@ -23,6 +23,7 @@ export default function MatchesView({
 }) {
   const [filter, setFilter] = useState('all');
   const [playerFilter, setPlayerFilter] = useState('all');
+  const [roundFilter, setRoundFilter] = useState('all');
 
   const driverRef = useRef(null);
   const onTourCompleteRef = useRef(onMatchesTourComplete);
@@ -77,6 +78,7 @@ export default function MatchesView({
 
     setFilter('all');
     setPlayerFilter('all');
+    setRoundFilter('all');
 
     const timer = window.setTimeout(() => {
       driverRef.current?.destroy();
@@ -103,6 +105,9 @@ export default function MatchesView({
       const done = isMatchCompleted(m);
       if (filter === 'pending' && done) return false;
       if (filter === 'completed' && !done) return false;
+      if (tournament.rounds === 2 && roundFilter !== 'all' && String(m.round) !== roundFilter) {
+        return false;
+      }
       if (playerFilter !== 'all') {
         const inMatch =
           m.teamA.manId === playerFilter ||
@@ -113,7 +118,7 @@ export default function MatchesView({
       }
       return true;
     });
-  }, [tournament.matches, filter, playerFilter]);
+  }, [tournament.matches, tournament.rounds, filter, playerFilter, roundFilter]);
 
   function formatMatchLabel(m) {
     const labelA = `${playerMap.get(m.teamA.manId)} + ${playerMap.get(m.teamA.womanId)}`;
@@ -128,7 +133,8 @@ export default function MatchesView({
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <div>
               <span className="badge badge-success" style={{ marginBottom: '6px' }}>
-                En cancha ahora · {tournament.courts > 1 ? `Turno ${nextSlotMatches[0].slot}` : `Juego #${nextSlotMatches[0].gameNumber}`}
+                En cancha ahora · {tournament.rounds === 2 && nextSlotMatches[0]?.round ? `Ronda ${nextSlotMatches[0].round} · ` : ''}
+                {tournament.courts > 1 ? `Turno ${nextSlotMatches[0].slot}` : `Juego #${nextSlotMatches[0].gameNumber}`}
               </span>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)' }}>
                 {nextSlotMatches.map(formatMatchLabel).join('  |  ')}
@@ -248,6 +254,32 @@ export default function MatchesView({
           </button>
         </div>
 
+        {tournament.rounds === 2 && (
+          <div className="pill-group" role="group" aria-label="Filtrar juegos por ronda">
+            <button
+              type="button"
+              className={`pill-btn ${roundFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setRoundFilter('all')}
+            >
+              Todas las rondas
+            </button>
+            <button
+              type="button"
+              className={`pill-btn ${roundFilter === '1' ? 'active' : ''}`}
+              onClick={() => setRoundFilter('1')}
+            >
+              Ronda 1
+            </button>
+            <button
+              type="button"
+              className={`pill-btn ${roundFilter === '2' ? 'active' : ''}`}
+              onClick={() => setRoundFilter('2')}
+            >
+              Ronda 2
+            </button>
+          </div>
+        )}
+
         <select
           id="player-filter"
           name="playerFilter"
@@ -286,6 +318,7 @@ export default function MatchesView({
               match={match}
               playerMap={playerMap}
               courts={tournament.courts}
+              showRoundBadge={tournament.rounds === 2}
               onScoreChange={onScoreChange}
               onClearMatch={onClearMatch}
             />
