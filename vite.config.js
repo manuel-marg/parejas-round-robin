@@ -26,5 +26,6 @@ function injectOgSiteUrl() {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [react(), injectOgSiteUrl()],
 });
