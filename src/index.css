@@ -359,6 +359,104 @@ input[type='number'] {
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
 }
 
+/* ==========================================================================
+   Controles Segmentados (Segmented Controls)
+   ========================================================================== */
+.segmented-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.segmented-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segmented-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.segmented-title .material-symbols-outlined {
+  font-size: 19px;
+  color: var(--primary);
+}
+
+.segmented-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  white-space: nowrap;
+}
+
+.segmented-control {
+  display: flex;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  width: 100%;
+}
+
+.segmented-btn {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.segmented-btn:hover:not(.active):not(:disabled) {
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+}
+
+.segmented-btn.active {
+  background: var(--surface);
+  color: var(--primary);
+  font-weight: 700;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.segmented-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.segmented-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 .label {
   display: block;
   font-size: 0.86rem;

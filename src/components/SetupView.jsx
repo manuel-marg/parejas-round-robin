@@ -291,46 +291,147 @@ export default function SetupView({
               />
             </div>
 
-            <div id="tour-match-rules" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div>
-                <label className="label" htmlFor="rounds-select">Rondas a disputar</label>
-                <select
-                  id="rounds-select"
-                  className="select"
-                  value={rounds}
-                  onChange={(e) => setRounds(Number(e.target.value))}
-                >
-                  <option value={1}>1 ronda (todos contra todos rotativo)</option>
-                  <option value={2}>2 rondas (doble vuelta con cruces alternados)</option>
-                </select>
+            <div id="tour-match-rules" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Rondas a disputar */}
+              <div className="segmented-group">
+                <div className="segmented-header">
+                  <label className="segmented-title">
+                    <span className="material-symbols-outlined" aria-hidden="true">repeat</span>
+                    Rondas a disputar
+                  </label>
+                  <span className="segmented-badge">
+                    {rounds === 1 ? '1 ronda' : '2 rondas (Doble vuelta)'}
+                  </span>
+                </div>
+                <div className="segmented-control" role="radiogroup" aria-label="Rondas a disputar">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={rounds === 1}
+                    className={`segmented-btn ${rounds === 1 ? 'active' : ''}`}
+                    onClick={() => setRounds(1)}
+                  >
+                    1 ronda
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={rounds === 2}
+                    className={`segmented-btn ${rounds === 2 ? 'active' : ''}`}
+                    onClick={() => setRounds(2)}
+                  >
+                    2 rondas
+                  </button>
+                </div>
+                <div className="segmented-hint">
+                  {rounds === 1
+                    ? 'Todos contra todos rotativo: cada jugador hace pareja con cada persona del sexo opuesto una vez.'
+                    : 'Doble vuelta con cruces alternados: juegas 2 partidos con cada pareja enfrentando a rivales distintos.'}
+                </div>
               </div>
 
-              <div>
-                <label className="label" htmlFor="courts-select">Canchas disponibles al mismo tiempo</label>
-                <select
-                  id="courts-select"
-                  className="select"
-                  value={effectiveCourts}
-                  onChange={(e) => setCourts(Number(e.target.value))}
-                >
-                  <option value={1}>1 cancha (turnos secuenciales con descanso)</option>
-                  {maxCourts >= 2 && <option value={2}>2 canchas simultáneas</option>}
-                  {maxCourts >= 3 && <option value={3}>3 canchas simultáneas</option>}
-                </select>
+              {/* Canchas disponibles */}
+              <div className="segmented-group">
+                <div className="segmented-header">
+                  <label className="segmented-title">
+                    <span className="material-symbols-outlined" aria-hidden="true">sports_tennis</span>
+                    Canchas disponibles al mismo tiempo
+                  </label>
+                  <span className="segmented-badge">
+                    {effectiveCourts} {effectiveCourts === 1 ? 'cancha' : 'canchas'}
+                  </span>
+                </div>
+                <div className="segmented-control" role="radiogroup" aria-label="Canchas disponibles">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={effectiveCourts === 1}
+                    className={`segmented-btn ${effectiveCourts === 1 ? 'active' : ''}`}
+                    onClick={() => setCourts(1)}
+                  >
+                    1 cancha
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={effectiveCourts === 2}
+                    disabled={maxCourts < 2}
+                    className={`segmented-btn ${effectiveCourts === 2 ? 'active' : ''}`}
+                    onClick={() => setCourts(2)}
+                    title={maxCourts < 2 ? 'Requiere al menos 4 mujeres y 4 hombres' : ''}
+                  >
+                    2 canchas
+                  </button>
+                  {maxCourts >= 3 && (
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={effectiveCourts === 3}
+                      className={`segmented-btn ${effectiveCourts === 3 ? 'active' : ''}`}
+                      onClick={() => setCourts(3)}
+                    >
+                      3 canchas
+                    </button>
+                  )}
+                </div>
+                <div className="segmented-hint">
+                  {effectiveCourts === 1
+                    ? maxCourts < 2
+                      ? '1 cancha: turnos secuenciales con descansos rotativos (agrega al menos 4 mujeres y 4 hombres para habilitar 2 canchas simultáneas).'
+                      : '1 cancha: turnos secuenciales con descansos rotativos programados.'
+                    : effectiveCourts === 2
+                    ? '2 canchas simultáneas: duplica el ritmo de juego y minimiza los tiempos de espera.'
+                    : '3 canchas simultáneas: partidos en paralelo para grupos grandes.'}
+                </div>
               </div>
 
-              <div>
-                <label className="label" htmlFor="points-select">Puntaje de referencia por juego</label>
-                <select
-                  id="points-select"
-                  className="select"
-                  value={targetPoints}
-                  onChange={(e) => setTargetPoints(Number(e.target.value))}
-                >
-                  <option value={11}>A 11 puntos (estándar pickleball)</option>
-                  <option value={15}>A 15 puntos</option>
-                  <option value={21}>A 21 puntos</option>
-                </select>
+              {/* Puntaje de referencia */}
+              <div className="segmented-group">
+                <div className="segmented-header">
+                  <label className="segmented-title">
+                    <span className="material-symbols-outlined" aria-hidden="true">scoreboard</span>
+                    Puntaje de referencia por juego
+                  </label>
+                  <span className="segmented-badge">
+                    A {targetPoints} pts
+                  </span>
+                </div>
+                <div className="segmented-control" role="radiogroup" aria-label="Puntaje de referencia">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={targetPoints === 11}
+                    className={`segmented-btn ${targetPoints === 11 ? 'active' : ''}`}
+                    onClick={() => setTargetPoints(11)}
+                  >
+                    11 pts
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={targetPoints === 15}
+                    className={`segmented-btn ${targetPoints === 15 ? 'active' : ''}`}
+                    onClick={() => setTargetPoints(15)}
+                  >
+                    15 pts
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={targetPoints === 21}
+                    className={`segmented-btn ${targetPoints === 21 ? 'active' : ''}`}
+                    onClick={() => setTargetPoints(21)}
+                  >
+                    21 pts
+                  </button>
+                </div>
+                <div className="segmented-hint">
+                  {targetPoints === 11
+                    ? 'A 11 puntos: formato estándar oficial de pickleball (recomendado).'
+                    : targetPoints === 15
+                    ? 'A 15 puntos: mayor duración por partido para juegos más disputados.'
+                    : 'A 21 puntos: formato largo o tradicional.'}
+                </div>
               </div>
             </div>
           </div>
