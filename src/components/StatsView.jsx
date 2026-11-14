@@ -217,33 +217,51 @@ export default function StatsView({
                 {summary.isFinished ? 'Tabla de posiciones finales' : 'Tabla de posiciones en progreso'}
               </h2>
               <p className="card-subtitle">
-                {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%) ·{' '}
-                Clasifican las 2 mejores mujeres y los 2 mejores hombres a la Gran Final.
+                {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%)
               </p>
             </div>
-            <a
-              href={whatsappHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-whatsapp btn-sm"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <WhatsAppIcon size={18} />
-              <span>Compartir resultados por WhatsApp</span>
-            </a>
+            {summary.isFinished && (
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-whatsapp btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <WhatsAppIcon size={18} />
+                <span>Compartir resultados por WhatsApp</span>
+              </a>
+            )}
           </div>
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${summary.progressPct}%` }} />
           </div>
 
-          <div className="standings-rule-note">
-            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>
-              info
-            </span>
-            <span>
-              <strong>Criterio de clasificación a la Gran Final:</strong> Clasifican las 2 mejores mujeres y los 2 mejores hombres. En caso de empate en partidos ganados (PG), clasifica quien tenga mejor diferencia de puntos (+Dif).
-            </span>
-          </div>
+          {!summary.isFinished && (
+            <div className="standings-warning-banner">
+              <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '20px', color: '#b45309', flexShrink: 0 }}>
+                warning
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.86rem', marginBottom: '2px' }}>
+                  Fase clasificatoria en juego
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#78350f', lineHeight: 1.45 }}>
+                  Aún quedan partidos pendientes por disputar. Te sugerimos registrar todos los resultados en la pestaña de <strong>Juegos</strong> antes de revisar la tabla de posiciones definitiva.
+                </div>
+                {onGoToMatches && (
+                  <button
+                    type="button"
+                    className="btn btn-warning-soft btn-sm"
+                    style={{ marginTop: '8px' }}
+                    onClick={onGoToMatches}
+                  >
+                    ← Ir a registrar partidos pendientes
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
