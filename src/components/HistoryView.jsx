@@ -1,6 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { isMatchCompleted } from '../domain/stats.js';
 import { startHistoryTutorial } from '../domain/tutorial.js';
+import {
+  confirmDeleteHistory,
+  confirmNewTournament,
+  confirmResetScores,
+} from '../utils/confirm.js';
 
 /**
  * Vista de gestión del torneo e historial guardado en este navegador.
@@ -76,8 +81,9 @@ export default function HistoryView({
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => {
-              if (window.confirm('¿Borrar todos los puntajes ingresados (incluyendo la Gran Final) y dejar los juegos pendientes?')) {
+            onClick={async () => {
+              const confirmed = await confirmResetScores();
+              if (confirmed) {
                 onResetScores();
               }
             }}
@@ -87,12 +93,9 @@ export default function HistoryView({
           <button
             type="button"
             className="btn btn-danger-soft"
-            onClick={() => {
-              if (
-                window.confirm(
-                  '¿Crear un nuevo torneo desde cero? Si quieres conservar este, guárdalo en el historial primero.'
-                )
-              ) {
+            onClick={async () => {
+              const confirmed = await confirmNewTournament();
+              if (confirmed) {
                 onNewTournament();
               }
             }}
@@ -158,7 +161,12 @@ export default function HistoryView({
                     <button
                       type="button"
                       className="btn btn-danger-soft btn-sm"
-                      onClick={() => onDeleteHistory(item.id)}
+                      onClick={async () => {
+                        const confirmed = await confirmDeleteHistory(item.title);
+                        if (confirmed) {
+                          onDeleteHistory(item.id);
+                        }
+                      }}
                     >
                       Eliminar
                     </button>

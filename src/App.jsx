@@ -27,6 +27,7 @@ import SetupView from './components/SetupView.jsx';
 import MatchesView from './components/MatchesView.jsx';
 import StatsView from './components/StatsView.jsx';
 import HistoryView from './components/HistoryView.jsx';
+import { confirmNewTournament } from './utils/confirm.js';
 
 /**
  * Componente raíz de la aplicación Pickleball (parejas mixtas rotativas).
@@ -211,8 +212,9 @@ export default function App() {
     setHistory(next);
   }
 
-  function handleNewTournamentPrompt() {
-    if (window.confirm('¿Volver a la configuración para crear un torneo nuevo?')) {
+  async function handleNewTournamentPrompt() {
+    const confirmed = await confirmNewTournament();
+    if (confirmed) {
       setTournament(null);
     }
   }
