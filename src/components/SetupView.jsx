@@ -294,15 +294,10 @@ export default function SetupView({
             <div id="tour-match-rules" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Rondas a disputar */}
               <div className="segmented-group">
-                <div className="segmented-header">
-                  <label className="segmented-title">
-                    <span className="material-symbols-outlined" aria-hidden="true">repeat</span>
-                    Rondas a disputar
-                  </label>
-                  <span className="segmented-badge">
-                    {rounds === 1 ? '1 ronda' : '2 rondas (Doble vuelta)'}
-                  </span>
-                </div>
+                <label className="segmented-title">
+                  <span className="material-symbols-outlined" aria-hidden="true">repeat</span>
+                  Rondas a disputar
+                </label>
                 <div className="segmented-control" role="radiogroup" aria-label="Rondas a disputar">
                   <button
                     type="button"
@@ -332,15 +327,10 @@ export default function SetupView({
 
               {/* Canchas disponibles */}
               <div className="segmented-group">
-                <div className="segmented-header">
-                  <label className="segmented-title">
-                    <span className="material-symbols-outlined" aria-hidden="true">sports_tennis</span>
-                    Canchas disponibles al mismo tiempo
-                  </label>
-                  <span className="segmented-badge">
-                    {effectiveCourts} {effectiveCourts === 1 ? 'cancha' : 'canchas'}
-                  </span>
-                </div>
+                <label className="segmented-title">
+                  <span className="material-symbols-outlined" aria-hidden="true">sports_tennis</span>
+                  Canchas disponibles al mismo tiempo
+                </label>
                 <div className="segmented-control" role="radiogroup" aria-label="Canchas disponibles">
                   <button
                     type="button"
@@ -387,15 +377,10 @@ export default function SetupView({
 
               {/* Puntaje de referencia */}
               <div className="segmented-group">
-                <div className="segmented-header">
-                  <label className="segmented-title">
-                    <span className="material-symbols-outlined" aria-hidden="true">scoreboard</span>
-                    Puntaje de referencia por juego
-                  </label>
-                  <span className="segmented-badge">
-                    A {targetPoints} pts
-                  </span>
-                </div>
+                <label className="segmented-title">
+                  <span className="material-symbols-outlined" aria-hidden="true">scoreboard</span>
+                  Puntaje de referencia por juego
+                </label>
                 <div className="segmented-control" role="radiogroup" aria-label="Puntaje de referencia">
                   <button
                     type="button"
