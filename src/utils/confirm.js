@@ -34,6 +34,12 @@ export async function confirmAction({
     cancelButtonText,
     reverseButtons: true,
     focusCancel: true,
+    customClass: {
+      popup: 'swal2-app-popup',
+      title: 'swal2-app-title',
+      htmlContainer: 'swal2-app-html',
+      actions: 'swal2-app-actions',
+    },
   });
 
   return result.isConfirmed;
