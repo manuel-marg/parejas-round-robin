@@ -374,6 +374,8 @@ export default function App() {
                 onFinalPairingChange={handleFinalPairingChange}
                 onClearFinal={handleClearFinal}
                 onGoToMatches={() => setActiveTab('matches')}
+                onResetScores={handleResetScores}
+                onNewTournament={() => setTournament(null)}
                 autoStartTour={shouldAutoStartStatsTour(tutorialState)}
                 manualTourTick={statsTourTick}
                 onStatsTourComplete={() => setTutorialState(markStatsTourSeen())}
