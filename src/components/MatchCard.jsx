@@ -29,7 +29,10 @@ export default function MatchCard({
   const isTie = completed && match.scoreA === match.scoreB;
 
   return (
-    <article className={`match-card ${completed ? 'completed' : inProgress ? 'in-progress' : ''}`}>
+    <article
+      id={`match-card-${match.id}`}
+      className={`match-card ${completed ? 'completed' : inProgress ? 'in-progress' : ''}`}
+    >
       <div className="match-header">
         <span style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap' }}>Juego #{match.gameNumber}</span>
         {showRoundBadge && match.round && (

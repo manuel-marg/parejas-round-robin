@@ -20,6 +20,7 @@ export default function MatchesView({
   autoStartTour = false,
   manualTourTick = 0,
   onMatchesTourComplete,
+  whatsappHref,
 }) {
   const [filter, setFilter] = useState('all');
   const [playerFilter, setPlayerFilter] = useState('all');
@@ -51,6 +52,36 @@ export default function MatchesView({
   const completedCount = totalMatches - pendingMatches.length;
   const progressPct = totalMatches > 0 ? Math.round((completedCount / totalMatches) * 100) : 0;
   const allCompleted = totalMatches > 0 && pendingMatches.length === 0;
+
+  const currentPendingMatch = useMemo(() => {
+    return tournament.matches.find((m) => !isMatchCompleted(m, tournament.targetPoints));
+  }, [tournament.matches, tournament.targetPoints]);
+
+  function handleScrollToCurrentMatch() {
+    if (currentPendingMatch) {
+      if (filter === 'completed') setFilter('all');
+      if (playerFilter !== 'all') setPlayerFilter('all');
+      if (roundFilter !== 'all' && String(currentPendingMatch.round) !== roundFilter) {
+        setRoundFilter('all');
+      }
+
+      window.setTimeout(() => {
+        const el = document.getElementById(`match-card-${currentPendingMatch.id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('match-card-highlight');
+          window.setTimeout(() => el.classList.remove('match-card-highlight'), 1800);
+        }
+      }, 60);
+    } else if (allCompleted) {
+      const finalEl = document.getElementById('final-match-card');
+      if (finalEl) {
+        finalEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        finalEl.classList.add('match-card-highlight');
+        window.setTimeout(() => finalEl.classList.remove('match-card-highlight'), 1800);
+      }
+    }
+  }
 
   const lastManualTickRef = useRef(0);
 
@@ -280,6 +311,7 @@ export default function MatchesView({
           onFinalScoreChange={onFinalScoreChange}
           onFinalPairingChange={onFinalPairingChange}
           onClearFinal={onClearFinal}
+          whatsappHref={whatsappHref}
         />
       )}
 
@@ -403,6 +435,20 @@ export default function MatchesView({
             Ver promedios finales
           </button>
         </section>
+      )}
+
+      {!allCompleted && currentPendingMatch && (
+        <button
+          type="button"
+          className="fab-current-match"
+          onClick={handleScrollToCurrentMatch}
+          aria-label={`Ir al juego #${currentPendingMatch.gameNumber}`}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '18px' }}>
+            arrow_downward
+          </span>
+          <span>Ir al juego #{currentPendingMatch.gameNumber}</span>
+        </button>
       )}
     </div>
   );

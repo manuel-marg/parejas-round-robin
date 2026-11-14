@@ -153,6 +153,15 @@ export default function SetupView({
           </p>
         </div>
 
+        <div className="setup-concept-banner">
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '20px', color: 'var(--primary)', flexShrink: 0 }}>
+            repeat
+          </span>
+          <span>
+            <strong>Sin parejas fijas:</strong> No necesitas inscribirte con pareja. En cada juego te asignaremos un compañero diferente del sexo opuesto.
+          </span>
+        </div>
+
         <div className="gender-setup-sections">
           <div id="tour-add-women" className="gender-box">
             <div className="gender-box-header">
@@ -381,13 +390,13 @@ export default function SetupView({
                 </div>
               </div>
 
-              {/* Puntaje de referencia */}
+              {/* ¿A cuántos puntos se juega? */}
               <div className="segmented-group">
                 <label className="segmented-title">
                   <span className="material-symbols-outlined" aria-hidden="true">scoreboard</span>
-                  Puntaje de referencia por juego
+                  ¿A cuántos puntos se juega?
                 </label>
-                <div className="segmented-control" role="radiogroup" aria-label="Puntaje de referencia">
+                <div className="segmented-control" role="radiogroup" aria-label="¿A cuántos puntos se juega?">
                   <button
                     type="button"
                     role="radio"

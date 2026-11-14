@@ -270,17 +270,18 @@ function formatStandingLine(row) {
     row.tied > 0
       ? `, ${row.tied === 1 ? '1 empatado' : `${row.tied} empatados`}`
       : '';
-  return `${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart}`;
+  const medal = row.rank === 1 ? '🥇 ' : row.rank === 2 ? '🥈 ' : row.rank === 3 ? '🥉 ' : '';
+  return `${medal}${row.rank}. ${row.name} — ${wonLabel}, ${lostLabel}${tiedPart}`;
 }
 
 /**
  * Formatea los promedios individuales (mujeres primero y luego hombres) y la Gran Final
- * en una lista precisa lista para enviar por WhatsApp.
+ * en una lista precisa lista para enviar por WhatsApp con medallas oficiales.
  */
 export function formatShareableSummary(tournament, standings, finalMatchResolved) {
   const roundsSuffix = tournament?.rounds === 2 ? ' (2 Rondas)' : '';
   const title = `${tournament?.title?.trim() || 'Torneo de Pickleball'}${roundsSuffix}`;
-  const lines = [`*${title}*`, ''];
+  const lines = [`🏆 *${title}*`, ''];
 
   lines.push('*Mujeres*');
   (standings?.women || []).forEach((row) => {
@@ -297,14 +298,16 @@ export function formatShareableSummary(tournament, standings, finalMatchResolved
     const teamALabel = `${finalMatchResolved.teamA.man.name} + ${finalMatchResolved.teamA.woman.name}`;
     const teamBLabel = `${finalMatchResolved.teamB.man.name} + ${finalMatchResolved.teamB.woman.name}`;
     lines.push('');
-    lines.push('*Gran Final*');
+    lines.push('🏆 *Gran Final*');
     lines.push(`${teamALabel} (${finalMatchResolved.scoreA}) vs (${finalMatchResolved.scoreB}) ${teamBLabel}`);
     if (finalMatchResolved.winnerSide === 'A') {
-      lines.push(`Campeones: ${teamALabel}`);
+      lines.push(`🥇 *Campeones:* ${teamALabel}`);
+      lines.push(`🥈 *Subcampeones:* ${teamBLabel}`);
     } else if (finalMatchResolved.winnerSide === 'B') {
-      lines.push(`Campeones: ${teamBLabel}`);
+      lines.push(`🥇 *Campeones:* ${teamBLabel}`);
+      lines.push(`🥈 *Subcampeones:* ${teamALabel}`);
     } else {
-      lines.push('Resultado: Empate');
+      lines.push('🤝 *Resultado:* Empate');
     }
   }
 

@@ -8,6 +8,7 @@ import {
 import {
   activateHelpSession,
   deleteHistoryEntry,
+  formatShareableSummary,
   loadActiveTournament,
   loadTournamentHistory,
   loadTutorialState,
@@ -89,6 +90,12 @@ export default function App() {
       tournament.targetPoints
     );
   }, [tournament, standings]);
+
+  const whatsappHref = useMemo(() => {
+    if (!tournament) return '#';
+    const text = formatShareableSummary(tournament, standings, finalMatchResolved);
+    return `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }, [tournament, standings, finalMatchResolved]);
 
   useEffect(() => {
     if (summary.isFinished && !tutorialState.tournamentCompleted) {
@@ -339,7 +346,7 @@ export default function App() {
                   className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
                   onClick={() => setActiveTab('stats')}
                 >
-                  <span>Promedios</span>
+                  <span>Posiciones</span>
                 </button>
                 <button
                   type="button"
@@ -374,6 +381,7 @@ export default function App() {
                 autoStartTour={shouldAutoStartMatchesTour(tutorialState)}
                 manualTourTick={matchesTourTick}
                 onMatchesTourComplete={() => setTutorialState(markMatchesTourSeen())}
+                whatsappHref={whatsappHref}
               />
             )}
 
@@ -434,7 +442,7 @@ export default function App() {
             <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
               leaderboard
             </span>
-            <span>Promedios</span>
+            <span>Posiciones</span>
           </button>
           <button
             type="button"

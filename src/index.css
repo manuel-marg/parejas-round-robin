@@ -1743,3 +1743,98 @@ div:where(.swal2-actions) button:focus-visible {
   outline-offset: 2px !important;
 }
 
+/* Banner de concepto de parejas rotativas */
+.setup-concept-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  border: 1px solid rgba(15, 118, 110, 0.18);
+}
+
+/* Botón flotante para ir al partido actual */
+.fab-current-match {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  z-index: 85;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: #ffffff;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 16px rgba(15, 118, 110, 0.4);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fab-current-match:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(15, 118, 110, 0.5);
+}
+
+.fab-current-match:active {
+  transform: scale(0.96);
+}
+
+@media (min-width: 768px) {
+  .fab-current-match {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+/* Pulso visual al scrollear a un partido */
+.match-card-highlight {
+  animation: matchHighlightPulse 1.8s ease;
+}
+
+@keyframes matchHighlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0.7);
+  }
+  30% {
+    box-shadow: 0 0 0 5px rgba(15, 118, 110, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(15, 118, 110, 0);
+  }
+}
+
+/* Nota de criterio de desempate en Posiciones */
+.standings-rule-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+/* Guía de siglas en Posiciones */
+.standings-legend-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+

@@ -214,11 +214,11 @@ export default function StatsView({
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
             <div>
               <h2 className="card-title">
-                {summary.isFinished ? 'Promedios finales del torneo' : 'Promedios en progreso'}
+                {summary.isFinished ? 'Tabla de posiciones finales' : 'Tabla de posiciones en progreso'}
               </h2>
               <p className="card-subtitle">
                 {summary.completedMatches} de {summary.totalMatches} partidos completados ({summary.progressPct}%) ·{' '}
-                Ordenado por victorias (PG), % victorias, diferencial (Dif) y promedio de puntos (Prom PF).
+                Clasifican las 2 mejores mujeres y los 2 mejores hombres a la Gran Final.
               </p>
             </div>
             <a
@@ -235,12 +235,21 @@ export default function StatsView({
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${summary.progressPct}%` }} />
           </div>
+
+          <div className="standings-rule-note">
+            <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '18px', color: 'var(--primary)', flexShrink: 0 }}>
+              info
+            </span>
+            <span>
+              <strong>Criterio de clasificación a la Gran Final:</strong> Clasifican las 2 mejores mujeres y los 2 mejores hombres. En caso de empate en partidos ganados (PG), clasifica quien tenga mejor diferencia de puntos (+Dif).
+            </span>
+          </div>
         </div>
       </section>
 
       <div id="tour-stats-women">
         <GenderStandingsSection
-          title="1. Mujeres — Promedios individuales"
+          title="1. Mujeres — Posiciones individuales"
           subtitle="Las 2 mejores mujeres clasifican a la Gran Final."
           playerColumnLabel="Jugadora"
           rows={standings.women}
@@ -250,12 +259,27 @@ export default function StatsView({
 
       <div id="tour-stats-men">
         <GenderStandingsSection
-          title="2. Hombres — Promedios individuales"
+          title="2. Hombres — Posiciones individuales"
           subtitle="Los 2 mejores hombres clasifican a la Gran Final."
           playerColumnLabel="Jugador"
           rows={standings.men}
           isFinished={summary.isFinished}
         />
+      </div>
+
+      <div className="standings-legend-card" style={{ marginBottom: '14px' }}>
+        <div style={{ fontWeight: 700, fontSize: '0.84rem', color: 'var(--text)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '16px', color: 'var(--text-muted)' }}>
+            help
+          </span>
+          Guía de siglas:
+        </div>
+        <div style={{ fontSize: '0.80rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+          <strong>G - P (PG / PP):</strong> Partidos Ganados y Perdidos ·{' '}
+          <strong>PF / PC:</strong> Puntos a Favor y en Contra ·{' '}
+          <strong>Dif:</strong> Diferencia de puntos (PF menos PC) ·{' '}
+          <strong>Prom:</strong> Promedio de puntos anotados por partido.
+        </div>
       </div>
 
       <div id="tour-stats-final">
@@ -267,6 +291,7 @@ export default function StatsView({
           onFinalPairingChange={onFinalPairingChange}
           onClearFinal={onClearFinal}
           onGoToMatches={onGoToMatches}
+          whatsappHref={whatsappHref}
         />
       </div>
 
