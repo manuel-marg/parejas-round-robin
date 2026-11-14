@@ -949,6 +949,12 @@ input[type='number'] {
   gap: 8px;
 }
 
+.match-card .match-header {
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .match-teams {
   display: flex;
   flex-direction: column;

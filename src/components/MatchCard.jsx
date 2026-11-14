@@ -31,27 +31,21 @@ export default function MatchCard({
   return (
     <article className={`match-card ${completed ? 'completed' : inProgress ? 'in-progress' : ''}`}>
       <div className="match-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-          <span style={{ fontWeight: 700, fontSize: '0.94rem' }}>Juego #{match.gameNumber}</span>
-          {showRoundBadge && match.round && (
-            <span className="badge badge-primary">
-              Ronda {match.round}
-            </span>
-          )}
-          {courts > 1 && (
-            <span className="badge badge-neutral">
-              Turno {match.slot} · Cancha {match.court}
-            </span>
-          )}
-        </div>
-        {completed ? (
-          isTie ? (
-            <span className="badge badge-warning">Empate</span>
-          ) : null
-        ) : inProgress ? (
-          <span className="badge badge-warning">En proceso</span>
-        ) : (
-          <span className="badge badge-neutral">Pendiente</span>
+        <span style={{ fontWeight: 700, fontSize: '0.94rem', whiteSpace: 'nowrap' }}>Juego #{match.gameNumber}</span>
+        {showRoundBadge && match.round && (
+          <span className="badge badge-primary">
+            Ronda {match.round}
+          </span>
+        )}
+        {courts > 1 && (
+          <span className="badge badge-neutral">
+            Turno {match.slot} · Cancha {match.court}
+          </span>
+        )}
+        {isTie && (
+          <span className="badge badge-warning" style={{ marginLeft: 'auto' }}>
+            Empate
+          </span>
         )}
       </div>
 
