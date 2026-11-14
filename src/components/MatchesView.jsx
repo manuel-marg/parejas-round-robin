@@ -120,39 +120,103 @@ export default function MatchesView({
     });
   }, [tournament.matches, tournament.rounds, filter, playerFilter, roundFilter]);
 
-  function formatMatchLabel(m) {
-    const labelA = `${playerMap.get(m.teamA.manId)} + ${playerMap.get(m.teamA.womanId)}`;
-    const labelB = `${playerMap.get(m.teamB.manId)} + ${playerMap.get(m.teamB.womanId)}`;
-    return `${tournament.courts > 1 ? `Cancha ${m.court}: ` : ''}${labelA} vs ${labelB}`;
-  }
+  const restingNames = useMemo(() => {
+    if (nextSlotMatches.length === 0) return [];
+    const restingIds = nextSlotMatches[0]?.restingIds || [];
+    return restingIds.map((id) => playerMap.get(id) || id);
+  }, [nextSlotMatches, playerMap]);
 
   return (
     <div>
       {nextSlotMatches.length > 0 ? (
-        <section id="tour-current-court" className="highlight-card">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-            <div>
-              <span className="badge badge-success" style={{ marginBottom: '6px' }}>
-                En cancha ahora · {tournament.rounds === 2 && nextSlotMatches[0]?.round ? `Ronda ${nextSlotMatches[0].round} · ` : ''}
-                {tournament.courts > 1 ? `Turno ${nextSlotMatches[0].slot}` : `Juego #${nextSlotMatches[0].gameNumber}`}
+        <section id="tour-current-court" className="highlight-card live-court-section">
+          <div className="live-court-header">
+            <div className="live-court-tags">
+              <span className="live-indicator-pill">
+                <span className="live-dot" aria-hidden="true" />
+                EN CANCHA AHORA
               </span>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)' }}>
-                {nextSlotMatches.map(formatMatchLabel).join('  |  ')}
-              </div>
+              {tournament.rounds === 2 && nextSlotMatches[0]?.round && (
+                <span className="badge badge-primary">
+                  Ronda {nextSlotMatches[0].round}
+                </span>
+              )}
+              <span className="badge badge-neutral">
+                {tournament.courts > 1
+                  ? `Turno ${nextSlotMatches[0].slot}`
+                  : `Juego #${nextSlotMatches[0].gameNumber}`}
+              </span>
             </div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--primary)' }}>
+            <div className="live-court-progress">
               {completedCount} / {totalMatches} juegos listos
             </div>
           </div>
+
+          <div className="live-courts-grid">
+            {nextSlotMatches.map((m) => {
+              const manA = playerMap.get(m.teamA.manId) || m.teamA.manId;
+              const womanA = playerMap.get(m.teamA.womanId) || m.teamA.womanId;
+              const manB = playerMap.get(m.teamB.manId) || m.teamB.manId;
+              const womanB = playerMap.get(m.teamB.womanId) || m.teamB.womanId;
+
+              return (
+                <div key={m.id} className="live-court-card">
+                  <div className="live-court-card-header">
+                    <span className="live-court-title">
+                      <span className="live-court-icon" aria-hidden="true">🎾</span>
+                      {tournament.courts > 1 ? `Cancha ${m.court}` : 'Cancha principal'}
+                    </span>
+                    <span className="live-court-game-badge">Juego #{m.gameNumber}</span>
+                  </div>
+
+                  <div className="live-court-matchup">
+                    <div className="live-team-col live-team-left">
+                      <div className="live-player-item" title={manA}>
+                        <span className="live-gender-tag live-gender-tag-h" title="Hombre">H</span>
+                        <span className="live-player-name">{manA}</span>
+                      </div>
+                      <div className="live-player-item" title={womanA}>
+                        <span className="live-gender-tag live-gender-tag-m" title="Mujer">M</span>
+                        <span className="live-player-name">{womanA}</span>
+                      </div>
+                    </div>
+
+                    <div className="live-vs-divider">
+                      <span className="live-vs-badge">VS</span>
+                    </div>
+
+                    <div className="live-team-col live-team-right">
+                      <div className="live-player-item" title={manB}>
+                        <span className="live-gender-tag live-gender-tag-h" title="Hombre">H</span>
+                        <span className="live-player-name">{manB}</span>
+                      </div>
+                      <div className="live-player-item" title={womanB}>
+                        <span className="live-gender-tag live-gender-tag-m" title="Mujer">M</span>
+                        <span className="live-player-name">{womanB}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {restingNames.length > 0 && (
+            <div className="live-resting-footer">
+              <span className="live-resting-icon" aria-hidden="true">☕</span>
+              <span className="live-resting-label">Descansan este turno:</span>
+              <span className="live-resting-list">{restingNames.join(', ')}</span>
+            </div>
+          )}
         </section>
       ) : (
-        <section id="tour-current-court" className="highlight-card">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+        <section id="tour-current-court" className="highlight-card highlight-card-finished">
+          <div className="live-court-header" style={{ marginBottom: 0 }}>
             <div>
               <span className="badge badge-success" style={{ marginBottom: '4px' }}>
-                Fase clasificatoria completada
+                🎉 Fase clasificatoria completada
               </span>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)', marginTop: '4px' }}>
                 Todos los {totalMatches} juegos tienen marcador. ¡Hora de la Gran Final!
               </div>
             </div>

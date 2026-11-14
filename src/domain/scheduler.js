@@ -5,6 +5,7 @@
  */
 
 const PRESET_4X4_MATCHES = [
+  // Ronda 1: 8 partidos base cubriendo las 16 combinaciones H×M
   // Partido 1: H1 + M1 vs H2 + M2
   [[0, 0], [1, 1]],
   // Partido 2: H3 + M3 vs H4 + M4
@@ -21,6 +22,27 @@ const PRESET_4X4_MATCHES = [
   [[0, 3], [2, 1]],
   // Partido 8: H2 + M3 vs H4 + M1
   [[1, 2], [3, 0]],
+];
+
+const PRESET_4X4_ROUND2_MATCHES = [
+  // Ronda 2: cruces dinámicos que no repiten los partidos de la Ronda 1,
+  // completan la 2da combinación de cada pareja H-M y equilibran rivales (3, 3, 2).
+  // Partido 9: H1 + M1 vs H2 + M3
+  [[0, 0], [1, 2]],
+  // Partido 10: H3 + M2 vs H4 + M4
+  [[2, 1], [3, 3]],
+  // Partido 11: H1 + M3 vs H2 + M4
+  [[0, 2], [1, 3]],
+  // Partido 12: H3 + M1 vs H4 + M2
+  [[2, 0], [3, 1]],
+  // Partido 13: H1 + M2 vs H4 + M3
+  [[0, 1], [3, 2]],
+  // Partido 14: H2 + M1 vs H3 + M4
+  [[1, 0], [2, 3]],
+  // Partido 15: H1 + M4 vs H4 + M1
+  [[0, 3], [3, 0]],
+  // Partido 16: H2 + M2 vs H3 + M3
+  [[1, 1], [2, 2]],
 ];
 
 const PRESET_2X2_MATCHES = [
@@ -306,7 +328,7 @@ function countBackToBackTransitions(slots) {
 /**
  * Genera el calendario de partidos mixtos con parejas rotativas.
  * Para 4 hombres y 4 mujeres usa la estructura exacta de 8 partidos sin repetir compañero.
- * Si se solicitan 2 rondas, repite los partidos a continuación de la primera ronda.
+ * Si se solicitan 2 rondas, la segunda ronda genera cruces dinámicos alternados sin partidos repetidos y con balance óptimo de rivales.
  *
  * @param {Array<{ id: string, name: string, gender: 'M' | 'H' }>} players
  * @param {{ courts?: number, rounds?: number }} [options]
@@ -333,32 +355,43 @@ export function generateMixedRoundRobinSchedule(players, options = {}) {
   const effectiveCourts = Math.min(Math.max(1, requestedCourts), maxUsefulCourts);
   const rounds = Number(options.rounds) === 2 ? 2 : 1;
 
-  let baseSlots;
+  let roundSlots = [];
   if (men.length === 4 && women.length === 4) {
-    if (effectiveCourts >= 2) {
-      baseSlots = [
-        [PRESET_4X4_MATCHES[0], PRESET_4X4_MATCHES[1]],
-        [PRESET_4X4_MATCHES[2], PRESET_4X4_MATCHES[3]],
-        [PRESET_4X4_MATCHES[4], PRESET_4X4_MATCHES[5]],
-        [PRESET_4X4_MATCHES[6], PRESET_4X4_MATCHES[7]],
-      ];
-    } else {
-      baseSlots = PRESET_4X4_MATCHES.map((m) => [m]);
-    }
+    const build4x4Slots = (preset) => {
+      if (effectiveCourts >= 2) {
+        return [
+          [preset[0], preset[1]],
+          [preset[2], preset[3]],
+          [preset[4], preset[5]],
+          [preset[6], preset[7]],
+        ];
+      }
+      return preset.map((m) => [m]);
+    };
+
+    roundSlots = [
+      build4x4Slots(PRESET_4X4_MATCHES),
+      build4x4Slots(PRESET_4X4_ROUND2_MATCHES),
+    ];
   } else if (men.length === 2 && women.length === 2) {
-    baseSlots = PRESET_2X2_MATCHES.map((m) => [m]);
+    const r1 = PRESET_2X2_MATCHES.map((m) => [m]);
+    roundSlots = [r1, r1];
   } else {
     const singleRoundMatches = computeMixedMatchCount(men.length, women.length, 1);
     const rawMatches = pairIntoMatches(men.length, women.length, singleRoundMatches);
-    baseSlots = scheduleMixedSlots(rawMatches, effectiveCourts);
+    const r1 = scheduleMixedSlots(rawMatches, effectiveCourts);
+    roundSlots = [r1, r1];
   }
 
   const matches = [];
   let gameCounter = 1;
   let slotCounter = 1;
+  const allScheduledSlots = [];
 
   for (let r = 1; r <= rounds; r++) {
-    baseSlots.forEach((slotMatches) => {
+    const currentSlots = roundSlots[r - 1] || roundSlots[0];
+    currentSlots.forEach((slotMatches) => {
+      allScheduledSlots.push(slotMatches);
       const activeIds = new Set();
       slotMatches.forEach(([teamA, teamB]) => {
         activeIds.add(men[teamA[0]].id);
@@ -403,7 +436,7 @@ export function generateMixedRoundRobinSchedule(players, options = {}) {
       totalMatches: matches.length,
       totalSlots: slotCounter - 1,
       courts: effectiveCourts,
-      backToBackTransitions: countBackToBackTransitions(baseSlots) * rounds,
+      backToBackTransitions: countBackToBackTransitions(allScheduledSlots),
     },
   };
 }

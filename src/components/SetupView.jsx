@@ -301,7 +301,7 @@ export default function SetupView({
                   onChange={(e) => setRounds(Number(e.target.value))}
                 >
                   <option value={1}>1 ronda (todos contra todos rotativo)</option>
-                  <option value={2}>2 rondas (doble vuelta, se repiten los partidos)</option>
+                  <option value={2}>2 rondas (doble vuelta con cruces alternados)</option>
                 </select>
               </div>
 

@@ -387,7 +387,7 @@ test('activateHelpSession activa la guía para la fecha actual y solo se muestra
   assert.equal(shouldAutoStartStatsTour(pastSession), false);
 });
 
-test('generateMixedRoundRobinSchedule a 2 rondas genera exactamente el doble de partidos consecutivos', () => {
+test('generateMixedRoundRobinSchedule a 2 rondas genera cruces alternados sin repetir partidos y con balance matemático', () => {
   const players = makePlayers(4, 4);
 
   // Conteo de partidos para 1 y 2 rondas
@@ -408,7 +408,21 @@ test('generateMixedRoundRobinSchedule a 2 rondas genera exactamente el doble de 
   assert.equal(round1.length, 8);
   assert.equal(round2.length, 8);
 
-  // Los partidos de la Ronda 2 repiten exactamente los cruces de la Ronda 1
+  // El primer partido de Ronda 2 enfrenta a H1+M1 contra H2+M3 (cruce dinámico)
+  assert.equal(round2[0].teamA.manId, 'H1');
+  assert.equal(round2[0].teamA.womanId, 'M1');
+  assert.equal(round2[0].teamB.manId, 'H2');
+  assert.equal(round2[0].teamB.womanId, 'M3');
+
+  // Los partidos de la Ronda 2 tienen correlación de turnos y canchas pero NO repiten los cruces
+  const r1MatchKeys = new Set(
+    round1.map((m) => {
+      const pA = `${m.teamA.manId}-${m.teamA.womanId}`;
+      const pB = `${m.teamB.manId}-${m.teamB.womanId}`;
+      return [pA, pB].sort().join(' vs ');
+    })
+  );
+
   for (let i = 0; i < 8; i++) {
     const m1 = round1[i];
     const m2 = round2[i];
@@ -416,9 +430,41 @@ test('generateMixedRoundRobinSchedule a 2 rondas genera exactamente el doble de 
     assert.equal(m2.gameNumber, i + 9);
     assert.equal(m2.slot, m1.slot + 4);
     assert.equal(m2.court, m1.court);
-    assert.deepEqual(m2.teamA, m1.teamA);
-    assert.deepEqual(m2.teamB, m1.teamB);
-    assert.deepEqual(m2.restingIds, m1.restingIds);
+    assert.deepEqual(m2.restingIds, []);
+
+    const pA = `${m2.teamA.manId}-${m2.teamA.womanId}`;
+    const pB = `${m2.teamB.manId}-${m2.teamB.womanId}`;
+    const key = [pA, pB].sort().join(' vs ');
+    assert.equal(r1MatchKeys.has(key), false, `El partido ${key} de Ronda 2 no debe repetir un cruce idéntico de Ronda 1`);
+  }
+
+  // Cada pareja mixta juega junta exactamente 2 veces (1 en Ronda 1 y 1 en Ronda 2)
+  const pairPartnerCounts = new Map();
+  for (const m of matches) {
+    const pA = `${m.teamA.manId}-${m.teamA.womanId}`;
+    const pB = `${m.teamB.manId}-${m.teamB.womanId}`;
+    pairPartnerCounts.set(pA, (pairPartnerCounts.get(pA) || 0) + 1);
+    pairPartnerCounts.set(pB, (pairPartnerCounts.get(pB) || 0) + 1);
+  }
+  assert.equal(pairPartnerCounts.size, 16);
+  for (const count of pairPartnerCounts.values()) {
+    assert.equal(count, 2, 'Cada combinación Hombre-Mujer debe jugar exactamente 2 veces como pareja');
+  }
+
+  // Rivales equilibrados: cada hombre enfrenta a cada otro hombre 2 o 3 veces (distribución 3, 3, 2, nunca 6-1-1)
+  const menOppCounts = new Map();
+  const womenOppCounts = new Map();
+  for (const m of matches) {
+    const hKey = [m.teamA.manId, m.teamB.manId].sort().join('-');
+    const wKey = [m.teamA.womanId, m.teamB.womanId].sort().join('-');
+    menOppCounts.set(hKey, (menOppCounts.get(hKey) || 0) + 1);
+    womenOppCounts.set(wKey, (womenOppCounts.get(wKey) || 0) + 1);
+  }
+  for (const count of menOppCounts.values()) {
+    assert.ok(count === 2 || count === 3, 'Los enfrentamientos entre hombres deben ser de 2 o 3 veces');
+  }
+  for (const count of womenOppCounts.values()) {
+    assert.ok(count === 2 || count === 3, 'Los enfrentamientos entre mujeres deben ser de 2 o 3 veces');
   }
 
   // Cada jugador juega exactamente 8 partidos en total
