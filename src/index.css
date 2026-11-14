@@ -931,6 +931,10 @@ input[type='number'] {
   border-color: #86efac;
 }
 
+.match-card.in-progress {
+  border-color: #fde68a;
+}
+
 .match-header {
   display: flex;
   align-items: center;

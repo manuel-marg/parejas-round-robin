@@ -155,7 +155,9 @@ export default function HistoryView({
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px' }}>
             {history.map((item) => {
-              const done = (item.matches || []).filter(isMatchCompleted).length;
+              const done = (item.matches || []).filter((m) =>
+                isMatchCompleted(m, item.targetPoints)
+              ).length;
               const dateLabel = item.savedAt
                 ? new Date(item.savedAt).toLocaleDateString('es-ES', {
                     day: '2-digit',

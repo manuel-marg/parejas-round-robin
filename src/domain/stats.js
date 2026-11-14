@@ -4,18 +4,61 @@
  */
 
 /**
- * Determina si un partido ya tiene ambos marcadores válidos capturados.
+ * Determina si un partido ya tiene ambos marcadores válidos capturados
+ * y ha alcanzado o superado el puntaje de referencia (targetPoints).
+ *
+ * @param {object} match
+ * @param {number} [targetPoints]
+ * @returns {boolean}
  */
-export function isMatchCompleted(match) {
-  return (
-    match != null &&
+export function isMatchCompleted(match, targetPoints) {
+  if (
+    match == null ||
+    typeof match.scoreA !== 'number' ||
+    typeof match.scoreB !== 'number' ||
+    !Number.isInteger(match.scoreA) ||
+    !Number.isInteger(match.scoreB) ||
+    match.scoreA < 0 ||
+    match.scoreB < 0
+  ) {
+    return false;
+  }
+
+  const effectiveTarget =
+    typeof targetPoints === 'number' && targetPoints > 0
+      ? targetPoints
+      : typeof match.targetPoints === 'number' && match.targetPoints > 0
+      ? match.targetPoints
+      : null;
+
+  if (effectiveTarget !== null) {
+    return match.scoreA >= effectiveTarget || match.scoreB >= effectiveTarget;
+  }
+
+  return true;
+}
+
+/**
+ * Determina si un partido ha comenzado a anotarse pero aún no ha concluido.
+ *
+ * @param {object} match
+ * @param {number} [targetPoints]
+ * @returns {boolean}
+ */
+export function isMatchInProgress(match, targetPoints) {
+  if (!match) return false;
+  if (isMatchCompleted(match, targetPoints)) return false;
+
+  const hasScoreA =
     typeof match.scoreA === 'number' &&
-    typeof match.scoreB === 'number' &&
     Number.isInteger(match.scoreA) &&
+    match.scoreA >= 0;
+  const hasScoreB =
+    typeof match.scoreB === 'number' &&
     Number.isInteger(match.scoreB) &&
-    match.scoreA >= 0 &&
-    match.scoreB >= 0
-  );
+    match.scoreB >= 0;
+
+  return hasScoreA || hasScoreB;
 }
 
 function sortPlayerRows(rows) {
@@ -38,8 +81,9 @@ function sortPlayerRows(rows) {
  * Calcula las estadísticas individuales y rankings separados para mujeres y hombres.
  * @param {Array<{ id: string, name: string, gender: 'M' | 'H' }>} players
  * @param {Array<object>} matches
+ * @param {number} [targetPoints]
  */
-export function computeIndividualStandings(players, matches) {
+export function computeIndividualStandings(players, matches, targetPoints) {
   const statsByPlayer = new Map();
 
   for (const player of players) {
@@ -79,7 +123,7 @@ export function computeIndividualStandings(players, matches) {
   }
 
   for (const match of matches) {
-    if (!isMatchCompleted(match)) continue;
+    if (!isMatchCompleted(match, targetPoints)) continue;
     if (!match.teamA || !match.teamB) continue;
 
     applyTeamMatch(
@@ -124,8 +168,12 @@ export function computeIndividualStandings(players, matches) {
 /**
  * Construye los equipos de la Gran Final con las 2 mejores mujeres y los 2 mejores hombres.
  * Por defecto usa cruce balanceado (1° H + 2° M vs 2° H + 1° M).
+ *
+ * @param {object} standings
+ * @param {object} finalMatch
+ * @param {number} [targetPoints]
  */
-export function resolveFinalMatch(standings, finalMatch) {
+export function resolveFinalMatch(standings, finalMatch, targetPoints) {
   const women = standings?.women || [];
   const men = standings?.men || [];
   const canFormFinal = women.length >= 2 && men.length >= 2;
@@ -150,7 +198,7 @@ export function resolveFinalMatch(standings, finalMatch) {
 
   const scoreA = finalMatch?.scoreA ?? null;
   const scoreB = finalMatch?.scoreB ?? null;
-  const completed = isMatchCompleted({ scoreA, scoreB });
+  const completed = isMatchCompleted({ scoreA, scoreB }, targetPoints);
 
   let winnerSide = null;
   if (completed) {
@@ -174,13 +222,18 @@ export function resolveFinalMatch(standings, finalMatch) {
 
 /**
  * Extrae indicadores de progreso de la fase clasificatoria y estado de la final.
+ *
+ * @param {object} standings
+ * @param {Array<object>} matches
+ * @param {object} finalMatch
+ * @param {number} [targetPoints]
  */
-export function computeSummary(standings, matches, finalMatch) {
+export function computeSummary(standings, matches, finalMatch, targetPoints) {
   const totalMatches = matches.length;
-  const completedMatches = matches.filter(isMatchCompleted).length;
+  const completedMatches = matches.filter((m) => isMatchCompleted(m, targetPoints)).length;
   const progressPct = totalMatches > 0 ? Math.round((completedMatches / totalMatches) * 100) : 0;
   const isFinished = totalMatches > 0 && completedMatches === totalMatches;
-  const isFinalCompleted = isFinished && isMatchCompleted(finalMatch);
+  const isFinalCompleted = isFinished && isMatchCompleted(finalMatch, targetPoints);
 
   return {
     totalMatches,

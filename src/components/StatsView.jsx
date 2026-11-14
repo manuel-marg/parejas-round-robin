@@ -262,6 +262,7 @@ export default function StatsView({
         <FinalMatchCard
           finalMatchResolved={finalMatchResolved}
           isQualifyingFinished={summary.isFinished}
+          targetPoints={tournament?.targetPoints}
           onFinalScoreChange={onFinalScoreChange}
           onFinalPairingChange={onFinalPairingChange}
           onClearFinal={onClearFinal}

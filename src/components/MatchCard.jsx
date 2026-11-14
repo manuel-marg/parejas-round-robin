@@ -1,5 +1,5 @@
 import React from 'react';
-import { isMatchCompleted } from '../domain/stats.js';
+import { isMatchCompleted, isMatchInProgress } from '../domain/stats.js';
 import TeamScoreRow from './TeamScoreRow.jsx';
 
 /**
@@ -10,10 +10,12 @@ export default function MatchCard({
   playerMap,
   courts,
   showRoundBadge = false,
+  targetPoints,
   onScoreChange,
   onClearMatch,
 }) {
-  const completed = isMatchCompleted(match);
+  const completed = isMatchCompleted(match, targetPoints);
+  const inProgress = isMatchInProgress(match, targetPoints);
   const manA = playerMap.get(match.teamA.manId) || match.teamA.manId;
   const womanA = playerMap.get(match.teamA.womanId) || match.teamA.womanId;
   const manB = playerMap.get(match.teamB.manId) || match.teamB.manId;
@@ -27,7 +29,7 @@ export default function MatchCard({
   const isTie = completed && match.scoreA === match.scoreB;
 
   return (
-    <article className={`match-card ${completed ? 'completed' : ''}`}>
+    <article className={`match-card ${completed ? 'completed' : inProgress ? 'in-progress' : ''}`}>
       <div className="match-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
           <span style={{ fontWeight: 700, fontSize: '0.94rem' }}>Juego #{match.gameNumber}</span>
@@ -46,6 +48,8 @@ export default function MatchCard({
           <span className={`badge ${isTie ? 'badge-warning' : 'badge-success'}`}>
             {isTie ? 'Empate' : 'Completado'}
           </span>
+        ) : inProgress ? (
+          <span className="badge badge-warning">En proceso</span>
         ) : (
           <span className="badge badge-neutral">Pendiente</span>
         )}

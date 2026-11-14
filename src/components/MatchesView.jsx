@@ -44,8 +44,8 @@ export default function MatchesView({
   );
 
   const pendingMatches = useMemo(
-    () => tournament.matches.filter((m) => !isMatchCompleted(m)),
-    [tournament.matches]
+    () => tournament.matches.filter((m) => !isMatchCompleted(m, tournament.targetPoints)),
+    [tournament.matches, tournament.targetPoints]
   );
   const totalMatches = tournament.matches.length;
   const completedCount = totalMatches - pendingMatches.length;
@@ -102,7 +102,7 @@ export default function MatchesView({
 
   const filteredMatches = useMemo(() => {
     return tournament.matches.filter((m) => {
-      const done = isMatchCompleted(m);
+      const done = isMatchCompleted(m, tournament.targetPoints);
       if (filter === 'pending' && done) return false;
       if (filter === 'completed' && !done) return false;
       if (tournament.rounds === 2 && roundFilter !== 'all' && String(m.round) !== roundFilter) {
@@ -286,6 +286,7 @@ export default function MatchesView({
         <FinalMatchCard
           finalMatchResolved={finalMatchResolved}
           isQualifyingFinished={allCompleted}
+          targetPoints={tournament.targetPoints}
           onFinalScoreChange={onFinalScoreChange}
           onFinalPairingChange={onFinalPairingChange}
           onClearFinal={onClearFinal}
@@ -383,6 +384,7 @@ export default function MatchesView({
               playerMap={playerMap}
               courts={tournament.courts}
               showRoundBadge={tournament.rounds === 2}
+              targetPoints={tournament.targetPoints}
               onScoreChange={onScoreChange}
               onClearMatch={onClearMatch}
             />

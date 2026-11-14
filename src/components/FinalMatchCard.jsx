@@ -7,10 +7,12 @@ import TeamScoreRow from './TeamScoreRow.jsx';
 export default function FinalMatchCard({
   finalMatchResolved,
   isQualifyingFinished,
+  targetPoints,
   onFinalScoreChange,
   onFinalPairingChange,
   onClearFinal,
   onGoToMatches,
+  onGoToStats,
 }) {
   if (!isQualifyingFinished) {
     return (
@@ -59,6 +61,8 @@ export default function FinalMatchCard({
     winnerSide,
   } = finalMatchResolved;
 
+  const inProgress = !completed && (scoreA !== null || scoreB !== null);
+
   const labelA = `${teamA.man.name} + ${teamA.woman.name}`;
   const labelB = `${teamB.man.name} + ${teamB.woman.name}`;
 
@@ -75,6 +79,8 @@ export default function FinalMatchCard({
           <span className={`badge ${winnerSide === 'tie' ? 'badge-warning' : 'badge-success'}`}>
             {winnerSide === 'tie' ? 'Empate' : 'Final completada'}
           </span>
+        ) : inProgress ? (
+          <span className="badge badge-warning">En proceso</span>
         ) : (
           <span className="badge badge-primary">Lista para jugar</span>
         )}
@@ -136,6 +142,8 @@ export default function FinalMatchCard({
             ) : (
               'La final terminó empatada — ajusta el marcador si juegan desempate.'
             )
+          ) : inProgress ? (
+            `Partido en proceso (a ${targetPoints || 11} pts) — ingresa el resultado definitivo.`
           ) : (
             'Captura el marcador del partido final.'
           )}

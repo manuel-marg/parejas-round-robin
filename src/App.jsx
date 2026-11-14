@@ -54,12 +54,20 @@ export default function App() {
 
   const standings = useMemo(() => {
     if (!tournament) return { women: [], men: [], all: [] };
-    return computeIndividualStandings(tournament.players, tournament.matches);
+    return computeIndividualStandings(
+      tournament.players,
+      tournament.matches,
+      tournament.targetPoints
+    );
   }, [tournament]);
 
   const finalMatchResolved = useMemo(() => {
     if (!tournament) return null;
-    return resolveFinalMatch(standings, tournament.finalMatch);
+    return resolveFinalMatch(
+      standings,
+      tournament.finalMatch,
+      tournament.targetPoints
+    );
   }, [tournament, standings]);
 
   const summary = useMemo(() => {
@@ -74,7 +82,12 @@ export default function App() {
         topMen: [],
       };
     }
-    return computeSummary(standings, tournament.matches, tournament.finalMatch);
+    return computeSummary(
+      standings,
+      tournament.matches,
+      tournament.finalMatch,
+      tournament.targetPoints
+    );
   }, [tournament, standings]);
 
   useEffect(() => {

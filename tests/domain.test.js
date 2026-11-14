@@ -8,6 +8,7 @@ import {
   computeIndividualStandings,
   computeSummary,
   isMatchCompleted,
+  isMatchInProgress,
   resolveFinalMatch,
 } from '../src/domain/stats.js';
 import {
@@ -488,4 +489,37 @@ test('generateMixedRoundRobinSchedule a 2 rondas genera cruces alternados sin re
   for (const row of standings.all) {
     assert.equal(row.played, 8);
   }
+});
+
+test('isMatchCompleted e isMatchInProgress respetan targetPoints (ej. 15 puntos)', () => {
+  // Partido pendiente (sin marcadores)
+  const pendingMatch = { scoreA: null, scoreB: null };
+  assert.equal(isMatchCompleted(pendingMatch, 15), false);
+  assert.equal(isMatchInProgress(pendingMatch, 15), false);
+
+  // Partido en proceso (ej. 13-10 cuando la meta es 15)
+  const inProgressMatch = { scoreA: 13, scoreB: 10 };
+  assert.equal(isMatchCompleted(inProgressMatch, 15), false);
+  assert.equal(isMatchInProgress(inProgressMatch, 15), true);
+
+  // Partido completado alcanzando exactamente targetPoints (ej. 15-10)
+  const completedMatch = { scoreA: 15, scoreB: 10 };
+  assert.equal(isMatchCompleted(completedMatch, 15), true);
+  assert.equal(isMatchInProgress(completedMatch, 15), false);
+
+  // Partido completado en desempate superando targetPoints (ej. 17-15)
+  const deuceMatch = { scoreA: 15, scoreB: 17 };
+  assert.equal(isMatchCompleted(deuceMatch, 15), true);
+  assert.equal(isMatchInProgress(deuceMatch, 15), false);
+
+  // Standings solo debe contabilizar los partidos que realmente alcanzaron targetPoints
+  const players = makePlayers(2, 2);
+  const mixedMatches = [
+    { teamA: { manId: 'H1', womanId: 'M1' }, teamB: { manId: 'H2', womanId: 'M2' }, scoreA: 13, scoreB: 10 }, // en progreso
+    { teamA: { manId: 'H1', womanId: 'M2' }, teamB: { manId: 'H2', womanId: 'M1' }, scoreA: 15, scoreB: 8 },  // completado
+  ];
+  const standings = computeIndividualStandings(players, mixedMatches, 15);
+  const h1 = standings.men.find((m) => m.playerId === 'H1');
+  assert.equal(h1.played, 1, 'H1 solo debe tener 1 partido jugado (el completado a 15)');
+  assert.equal(h1.pointsFor, 15);
 });
