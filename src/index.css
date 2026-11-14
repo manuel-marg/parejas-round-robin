@@ -925,10 +925,17 @@ input[type='number'] {
   gap: 10px;
   box-shadow: var(--shadow);
   min-width: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .match-card.completed {
+  background: #f7fdf9;
   border-color: #86efac;
+}
+
+.match-card.completed .team-score-row:not(.winner) {
+  background: #ffffff;
+  border-color: #e2e8f0;
 }
 
 .match-card.in-progress {
@@ -958,10 +965,11 @@ input[type='number'] {
   background: var(--surface-alt);
   border: 1px solid transparent;
   min-width: 0;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .team-score-row.winner {
-  background: #f0fdf4;
+  background: #dcfce7;
   border-color: #86efac;
 }
 

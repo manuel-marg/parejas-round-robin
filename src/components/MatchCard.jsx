@@ -45,9 +45,9 @@ export default function MatchCard({
           )}
         </div>
         {completed ? (
-          <span className={`badge ${isTie ? 'badge-warning' : 'badge-success'}`}>
-            {isTie ? 'Empate' : 'Completado'}
-          </span>
+          isTie ? (
+            <span className="badge badge-warning">Empate</span>
+          ) : null
         ) : inProgress ? (
           <span className="badge badge-warning">En proceso</span>
         ) : (
