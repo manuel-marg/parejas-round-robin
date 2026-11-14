@@ -348,7 +348,7 @@ export default function SetupView({
                     disabled={maxCourts < 2}
                     className={`segmented-btn ${effectiveCourts === 2 ? 'active' : ''}`}
                     onClick={() => setCourts(2)}
-                    title={maxCourts < 2 ? 'Requiere al menos 4 mujeres y 4 hombres' : ''}
+                    title={maxCourts < 2 ? 'Para habilitar 2 canchas tienes que tener al menos agregados 4 mujeres y 4 hombres' : ''}
                   >
                     2 canchas
                   </button>
@@ -365,13 +365,19 @@ export default function SetupView({
                   )}
                 </div>
                 <div className="segmented-hint">
-                  {effectiveCourts === 1
-                    ? maxCourts < 2
-                      ? '1 cancha: turnos secuenciales con descansos rotativos (agrega al menos 4 mujeres y 4 hombres para habilitar 2 canchas simultáneas).'
-                      : '1 cancha: turnos secuenciales con descansos rotativos programados.'
-                    : effectiveCourts === 2
-                    ? '2 canchas simultáneas: duplica el ritmo de juego y minimiza los tiempos de espera.'
-                    : '3 canchas simultáneas: partidos en paralelo para grupos grandes.'}
+                  {effectiveCourts === 1 ? (
+                    maxCourts < 2 ? (
+                      <>
+                        <strong style={{ color: '#b45309' }}>Nota importante:</strong> Para habilitar 2 canchas tienes que tener al menos agregados 4 mujeres y 4 hombres.
+                      </>
+                    ) : (
+                      '1 cancha: turnos secuenciales con descansos rotativos programados.'
+                    )
+                  ) : effectiveCourts === 2 ? (
+                    '2 canchas simultáneas: duplica el ritmo de juego y minimiza los tiempos de espera.'
+                  ) : (
+                    '3 canchas simultáneas: partidos en paralelo para grupos grandes.'
+                  )}
                 </div>
               </div>
 
