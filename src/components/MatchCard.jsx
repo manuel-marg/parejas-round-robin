@@ -31,7 +31,7 @@ export default function MatchCard({
   return (
     <article className={`match-card ${completed ? 'completed' : inProgress ? 'in-progress' : ''}`}>
       <div className="match-header">
-        <span style={{ fontWeight: 700, fontSize: '0.94rem', whiteSpace: 'nowrap' }}>Juego #{match.gameNumber}</span>
+        <span style={{ fontWeight: 700, fontSize: '0.88rem', whiteSpace: 'nowrap' }}>Juego #{match.gameNumber}</span>
         {showRoundBadge && match.round && (
           <span className="badge badge-primary">
             Ronda {match.round}

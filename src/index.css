@@ -951,8 +951,14 @@ input[type='number'] {
 
 .match-card .match-header {
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+}
+
+.match-card .match-header .badge {
+  font-size: 0.71rem;
+  padding: 2px 7px;
+  line-height: 1.25;
 }
 
 .match-teams {
