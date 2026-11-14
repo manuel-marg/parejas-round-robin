@@ -136,16 +136,6 @@ export default function MatchesView({
                 <span className="live-dot" aria-hidden="true" />
                 EN CANCHA AHORA
               </span>
-              {tournament.rounds === 2 && nextSlotMatches[0]?.round && (
-                <span className="badge badge-primary">
-                  Ronda {nextSlotMatches[0].round}
-                </span>
-              )}
-              <span className="badge badge-neutral">
-                {tournament.courts > 1
-                  ? `Turno ${nextSlotMatches[0].slot}`
-                  : `Juego #${nextSlotMatches[0].gameNumber}`}
-              </span>
             </div>
             <div className="live-court-progress">
               {completedCount} / {totalMatches} juegos listos
@@ -163,7 +153,7 @@ export default function MatchesView({
                 <div key={m.id} className="live-court-card">
                   <div className="live-court-card-header">
                     <span className="live-court-title">
-                      <span className="live-court-icon" aria-hidden="true">🎾</span>
+                      <span className="material-symbols-outlined live-court-icon" aria-hidden="true">location_on</span>
                       {tournament.courts > 1 ? `Cancha ${m.court}` : 'Cancha principal'}
                     </span>
                     <span className="live-court-game-badge">Juego #{m.gameNumber}</span>
@@ -232,7 +222,7 @@ export default function MatchesView({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="progress-trophy" aria-hidden="true">🏆</span>
+              <span className="material-symbols-outlined progress-trophy" aria-hidden="true">trophy</span>
               <span style={{ fontWeight: 700, fontSize: '0.98rem', color: 'var(--text)' }}>
                 {allCompleted ? '¡Fase clasificatoria completada!' : 'Progreso hacia la Gran Final'}
               </span>

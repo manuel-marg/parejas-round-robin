@@ -796,7 +796,9 @@ input[type='number'] {
 }
 
 .live-court-icon {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
+  color: #16a34a;
+  line-height: 1;
 }
 
 .live-court-game-badge {
@@ -1252,11 +1254,12 @@ input[type='number'] {
 }
 
 .progress-trophy {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: #f59e0b;
 }
 
 .filter-toolbar {
