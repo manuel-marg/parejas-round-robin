@@ -25,8 +25,6 @@ export default function HistoryView({
   const driverRef = useRef(null);
   const onTourCompleteRef = useRef(onHistoryTourComplete);
   onTourCompleteRef.current = onHistoryTourComplete;
-  const womenCount = tournament.players.filter((p) => p.gender === 'M').length;
-  const menCount = tournament.players.filter((p) => p.gender === 'H').length;
 
   const lastManualTickRef = useRef(0);
 
@@ -74,13 +72,29 @@ export default function HistoryView({
           Administra los puntajes o guarda este torneo en el historial del dispositivo.
         </p>
 
-        <div className="history-actions-grid">
-          <button type="button" className="btn btn-primary" onClick={onSaveToHistory}>
-            Guardar copia en historial
-          </button>
+        <div className="history-actions-list">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="history-action-card-btn"
+            onClick={onSaveToHistory}
+          >
+            <div className="history-action-icon-wrap primary" aria-hidden="true">
+              <span className="material-symbols-outlined">save</span>
+            </div>
+            <div className="history-action-content">
+              <span className="history-action-title">Guardar copia en historial</span>
+              <span className="history-action-subtitle">
+                Guarda un respaldo de este torneo con todos sus marcadores y estadísticas en este dispositivo.
+              </span>
+            </div>
+            <span className="material-symbols-outlined history-action-arrow" aria-hidden="true">
+              chevron_right
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="history-action-card-btn"
             onClick={async () => {
               const confirmed = await confirmResetScores();
               if (confirmed) {
@@ -88,11 +102,23 @@ export default function HistoryView({
               }
             }}
           >
-            Reiniciar puntajes
+            <div className="history-action-icon-wrap warning" aria-hidden="true">
+              <span className="material-symbols-outlined">restart_alt</span>
+            </div>
+            <div className="history-action-content">
+              <span className="history-action-title">Reiniciar puntajes</span>
+              <span className="history-action-subtitle">
+                Borra todos los marcadores ingresados (incluyendo la Gran Final) para volver a jugarlos desde cero.
+              </span>
+            </div>
+            <span className="material-symbols-outlined history-action-arrow" aria-hidden="true">
+              chevron_right
+            </span>
           </button>
+
           <button
             type="button"
-            className="btn btn-danger-soft"
+            className="history-action-card-btn"
             onClick={async () => {
               const confirmed = await confirmNewTournament();
               if (confirmed) {
@@ -100,13 +126,19 @@ export default function HistoryView({
               }
             }}
           >
-            Nuevo torneo / Cambiar jugadores
+            <div className="history-action-icon-wrap danger" aria-hidden="true">
+              <span className="material-symbols-outlined">group_add</span>
+            </div>
+            <div className="history-action-content">
+              <span className="history-action-title">Nuevo torneo / Cambiar jugadores</span>
+              <span className="history-action-subtitle">
+                Regresa a la configuración inicial para ajustar los participantes o crear un nuevo torneo.
+              </span>
+            </div>
+            <span className="material-symbols-outlined history-action-arrow" aria-hidden="true">
+              chevron_right
+            </span>
           </button>
-        </div>
-
-        <div style={{ marginTop: '14px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          <strong>Resumen del calendario:</strong> {womenCount} mujeres · {menCount} hombres ·{' '}
-          {tournament.matches.length} partidos + Gran Final · {tournament.courts} cancha(s)
         </div>
       </section>
 
