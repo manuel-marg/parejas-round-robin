@@ -106,3 +106,23 @@ export async function confirmLoadHistory(title) {
     isDanger: false,
   });
 }
+
+/**
+ * Alerta informativa para indicar que se guardó una copia en el historial del dispositivo.
+ */
+export async function notifySavedToHistory() {
+  return Swal.fire({
+    title: 'Copia guardada en el historial',
+    text: 'El torneo actual ha sido guardado exitosamente en el historial de este dispositivo. Puedes consultarlo o volver a cargarlo un poco más abajo.',
+    icon: 'success',
+    showCancelButton: false,
+    confirmButtonColor: '#0f766e',
+    confirmButtonText: 'Aceptar',
+    customClass: {
+      popup: 'swal2-app-popup',
+      title: 'swal2-app-title',
+      htmlContainer: 'swal2-app-html',
+      actions: 'swal2-app-actions',
+    },
+  });
+}

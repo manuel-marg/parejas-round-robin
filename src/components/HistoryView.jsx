@@ -5,6 +5,7 @@ import {
   confirmDeleteHistory,
   confirmNewTournament,
   confirmResetScores,
+  notifySavedToHistory,
 } from '../utils/confirm.js';
 
 /**
@@ -76,7 +77,16 @@ export default function HistoryView({
           <button
             type="button"
             className="history-action-card-btn"
-            onClick={onSaveToHistory}
+            onClick={async () => {
+              onSaveToHistory?.();
+              await notifySavedToHistory();
+              const historyListEl = document.getElementById('tour-history-list');
+              if (historyListEl) {
+                historyListEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                historyListEl.classList.add('match-card-highlight');
+                window.setTimeout(() => historyListEl.classList.remove('match-card-highlight'), 1800);
+              }
+            }}
           >
             <div className="history-action-icon-wrap primary" aria-hidden="true">
               <span className="material-symbols-outlined">save</span>
