@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 import { generateMixedRoundRobinSchedule } from './domain/scheduler.js';
 import {
   computeIndividualStandings,
@@ -31,6 +32,14 @@ import HistoryView from './components/HistoryView.jsx';
 import WelcomeView from './components/WelcomeView.jsx';
 import SavedTournamentsView from './components/SavedTournamentsView.jsx';
 import { confirmNewTournament } from './utils/confirm.js';
+import {
+  goBackToWelcome,
+  pushNavTab,
+  pushNavView,
+  resolveNavFromHash,
+  syncInitialHistory,
+  syncTournamentStart,
+} from './utils/navigation.js';
 
 /**
  * Componente raíz de la aplicación Pickleball (parejas mixtas rotativas).
@@ -43,18 +52,66 @@ export default function App() {
   const [matchesTourTick, setMatchesTourTick] = useState(0);
   const [statsTourTick, setStatsTourTick] = useState(0);
   const [historyTourTick, setHistoryTourTick] = useState(0);
-  const [activeTab, setActiveTab] = useState('matches');
-  const [initialViewMode, setInitialViewMode] = useState('welcome');
+
+  const initialNav = useMemo(
+    () =>
+      resolveNavFromHash(
+        typeof window !== 'undefined' ? window.location.hash : '',
+        Boolean(tournament)
+      ),
+    []
+  );
+  const [activeTab, setActiveTab] = useState(initialNav.tab);
+  const [initialViewMode, setInitialViewMode] = useState(initialNav.initialViewMode);
+
+  const tournamentRef = useRef(tournament);
+  tournamentRef.current = tournament;
+
+  const activeTabRef = useRef(activeTab);
+  activeTabRef.current = activeTab;
+
+  const initialViewModeRef = useRef(initialViewMode);
+  initialViewModeRef.current = initialViewMode;
 
   useEffect(() => {
     saveActiveTournament(tournament);
   }, [tournament]);
 
   useEffect(() => {
+    // Sincroniza la URL inicial si el usuario entra sin hash o recarga
+    syncInitialHistory(Boolean(tournamentRef.current));
+
+    function handlePopState() {
+      // Si hay un modal SweetAlert2 abierto, cerrarlo al navegar atrás
+      if (typeof Swal !== 'undefined' && Swal.isVisible?.()) {
+        Swal.close();
+      }
+
+      const hasTournament = Boolean(tournamentRef.current);
+      const resolved = resolveNavFromHash(window.location.hash, hasTournament);
+
+      if (hasTournament) {
+        if (resolved.isPreTournamentHash) {
+          // Si el usuario estaba en la raíz del torneo (#matches) y le dio atrás hacia un hash previo (#welcome/#setup/#saved),
+          // forzamos el retroceso para que continúe saliendo hacia la web previa de forma natural
+          window.history.back();
+          return;
+        }
+        setActiveTab(resolved.tab);
+      } else {
+        setInitialViewMode(resolved.initialViewMode);
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [activeTab]);
+  }, [activeTab, initialViewMode]);
 
   const standings = useMemo(() => {
     if (!tournament) return { women: [], men: [], all: [] };
@@ -106,6 +163,26 @@ export default function App() {
     }
   }, [summary.isFinished, tutorialState.tournamentCompleted]);
 
+  function handleNavigateView(mode, options) {
+    pushNavView(mode, options);
+    setInitialViewMode(mode);
+  }
+
+  function handleNavigateTab(tab) {
+    pushNavTab(tab, activeTabRef.current);
+    setActiveTab(tab);
+  }
+
+  function handleBackNav() {
+    goBackToWelcome(() => setInitialViewMode('welcome'));
+  }
+
+  function handleExitTournamentToWelcome() {
+    setTournament(null);
+    pushNavView('welcome', { replace: true });
+    setInitialViewMode('welcome');
+  }
+
   function handleStartTournament({ title, players, courts, targetPoints, rounds = 1 }) {
     const { matches, meta } = generateMixedRoundRobinSchedule(players, { courts, rounds });
     setTournament({
@@ -123,6 +200,7 @@ export default function App() {
       },
       meta,
     });
+    syncTournamentStart();
     setActiveTab('matches');
   }
 
@@ -206,7 +284,7 @@ export default function App() {
         },
       };
     });
-    setActiveTab('matches');
+    handleNavigateTab('matches');
   }
 
   function handleSaveToHistory() {
@@ -227,6 +305,7 @@ export default function App() {
       finalMatch: entry.finalMatch || { pairingMode: 'crossed', scoreA: null, scoreB: null },
       meta: entry.meta || null,
     });
+    syncTournamentStart();
     setActiveTab('matches');
   }
 
@@ -238,8 +317,7 @@ export default function App() {
   async function handleNewTournamentPrompt() {
     const confirmed = await confirmNewTournament();
     if (confirmed) {
-      setTournament(null);
-      setInitialViewMode('welcome');
+      handleExitTournamentToWelcome();
     }
   }
 
@@ -248,7 +326,7 @@ export default function App() {
     setTutorialState(nextState);
 
     if (!tournament) {
-      setInitialViewMode('setup');
+      handleNavigateView('setup');
       setSetupTourTick((t) => t + 1);
     } else if (activeTab === 'matches') {
       setMatchesTourTick((t) => t + 1);
@@ -318,7 +396,7 @@ export default function App() {
               onStartTournament={handleStartTournament}
               history={history}
               onLoadHistory={handleLoadHistory}
-              onBackToWelcome={() => setInitialViewMode('welcome')}
+              onBackToWelcome={handleBackNav}
               autoStartTour={shouldAutoStartSetupTour(tutorialState)}
               manualTourTick={setupTourTick}
               onSetupTourComplete={() => setTutorialState(markSetupTourSeen())}
@@ -326,15 +404,15 @@ export default function App() {
           ) : initialViewMode === 'saved' ? (
             <SavedTournamentsView
               history={history}
-              onBackToWelcome={() => setInitialViewMode('welcome')}
-              onCreateTournament={() => setInitialViewMode('setup')}
+              onBackToWelcome={handleBackNav}
+              onCreateTournament={() => handleNavigateView('setup')}
               onLoadHistory={handleLoadHistory}
               onDeleteHistory={handleDeleteHistory}
             />
           ) : (
             <WelcomeView
-              onCreateTournament={() => setInitialViewMode('setup')}
-              onOpenSaved={() => setInitialViewMode('saved')}
+              onCreateTournament={() => handleNavigateView('setup')}
+              onOpenSaved={() => handleNavigateView('saved')}
               savedCount={history.length}
             />
           )
@@ -347,7 +425,7 @@ export default function App() {
                   role="tab"
                   aria-selected={activeTab === 'matches'}
                   className={`tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('matches')}
+                  onClick={() => handleNavigateTab('matches')}
                 >
                   <span>Juegos</span>
                   <span
@@ -366,7 +444,7 @@ export default function App() {
                   role="tab"
                   aria-selected={activeTab === 'stats'}
                   className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('stats')}
+                  onClick={() => handleNavigateTab('stats')}
                 >
                   <span>Posiciones</span>
                 </button>
@@ -375,7 +453,7 @@ export default function App() {
                   role="tab"
                   aria-selected={activeTab === 'history'}
                   className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('history')}
+                  onClick={() => handleNavigateTab('history')}
                 >
                   <span>Historial y Opciones</span>
                 </button>
@@ -399,7 +477,7 @@ export default function App() {
                 onFinalScoreChange={handleFinalScoreChange}
                 onFinalPairingChange={handleFinalPairingChange}
                 onClearFinal={handleClearFinal}
-                onGoToStats={() => setActiveTab('stats')}
+                onGoToStats={() => handleNavigateTab('stats')}
                 autoStartTour={shouldAutoStartMatchesTour(tutorialState)}
                 manualTourTick={matchesTourTick}
                 onMatchesTourComplete={() => setTutorialState(markMatchesTourSeen())}
@@ -416,12 +494,9 @@ export default function App() {
                 onFinalScoreChange={handleFinalScoreChange}
                 onFinalPairingChange={handleFinalPairingChange}
                 onClearFinal={handleClearFinal}
-                onGoToMatches={() => setActiveTab('matches')}
+                onGoToMatches={() => handleNavigateTab('matches')}
                 onResetScores={handleResetScores}
-                onNewTournament={() => {
-                  setTournament(null);
-                  setInitialViewMode('welcome');
-                }}
+                onNewTournament={handleExitTournamentToWelcome}
                 autoStartTour={shouldAutoStartStatsTour(tutorialState)}
                 manualTourTick={statsTourTick}
                 onStatsTourComplete={() => setTutorialState(markStatsTourSeen())}
@@ -436,10 +511,7 @@ export default function App() {
                 onLoadHistory={handleLoadHistory}
                 onDeleteHistory={handleDeleteHistory}
                 onResetScores={handleResetScores}
-                onNewTournament={() => {
-                  setTournament(null);
-                  setInitialViewMode('welcome');
-                }}
+                onNewTournament={handleExitTournamentToWelcome}
                 autoStartTour={shouldAutoStartHistoryTour(tutorialState)}
                 manualTourTick={historyTourTick}
                 onHistoryTourComplete={() => setTutorialState(markHistoryTourSeen())}
@@ -454,7 +526,7 @@ export default function App() {
           <button
             type="button"
             className={`mobile-nav-btn ${activeTab === 'matches' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matches')}
+            onClick={() => handleNavigateTab('matches')}
           >
             <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
               pickleball
@@ -465,7 +537,7 @@ export default function App() {
             id="tour-stats-tab-mobile"
             type="button"
             className={`mobile-nav-btn ${activeTab === 'stats' ? 'active' : ''}`}
-            onClick={() => setActiveTab('stats')}
+            onClick={() => handleNavigateTab('stats')}
           >
             <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
               leaderboard
@@ -475,7 +547,7 @@ export default function App() {
           <button
             type="button"
             className={`mobile-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
-            onClick={() => setActiveTab('history')}
+            onClick={() => handleNavigateTab('history')}
           >
             <span className="material-symbols-outlined mobile-nav-icon" aria-hidden="true">
               history
