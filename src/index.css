@@ -1851,3 +1851,208 @@ div:where(.swal2-actions) button:focus-visible {
   box-shadow: var(--shadow);
 }
 
+/* Menú inicial de bienvenida */
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.welcome-hero-card {
+  padding: 24px 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #ffffff 0%, var(--primary-soft) 100%);
+  border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+.welcome-hero-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.welcome-hero-icon-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(15, 118, 110, 0.3);
+}
+
+.welcome-hero-title {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.welcome-hero-subtitle {
+  margin: 0;
+  font-size: 0.90rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.welcome-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.welcome-action-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  width: 100%;
+}
+
+.welcome-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.welcome-action-card:active {
+  transform: scale(0.99);
+}
+
+.welcome-action-primary {
+  border-color: rgba(15, 118, 110, 0.35);
+}
+
+.welcome-action-primary:hover {
+  border-color: var(--primary);
+  background: #fbfdfd;
+}
+
+.welcome-action-secondary:hover {
+  border-color: #94a3b8;
+}
+
+.welcome-action-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.welcome-action-icon-wrap.primary {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.welcome-action-icon-wrap.secondary {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.welcome-action-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.welcome-action-title {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.welcome-action-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.welcome-action-arrow {
+  color: #94a3b8;
+  font-size: 24px;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.welcome-action-card:hover .welcome-action-arrow {
+  color: var(--primary);
+  transform: translateX(4px);
+}
+
+.welcome-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.welcome-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.welcome-feature-icon {
+  font-size: 22px;
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.welcome-feature-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.welcome-feature-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .welcome-hero-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+  .welcome-hero-title {
+    font-size: 1.2rem;
+  }
+  .welcome-action-card {
+    padding: 16px;
+    gap: 12px;
+  }
+  .welcome-action-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+}
+

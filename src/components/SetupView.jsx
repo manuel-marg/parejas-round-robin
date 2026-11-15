@@ -10,6 +10,7 @@ export default function SetupView({
   onStartTournament,
   history,
   onLoadHistory,
+  onBackToWelcome,
   autoStartTour = false,
   manualTourTick = 0,
   onSetupTourComplete,
@@ -144,7 +145,22 @@ export default function SetupView({
   }
 
   return (
-    <div className="setup-grid">
+    <div>
+      {onBackToWelcome && (
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          style={{ marginBottom: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+          onClick={onBackToWelcome}
+        >
+          <span className="material-symbols-outlined" aria-hidden="true" style={{ fontSize: '18px' }}>
+            arrow_back
+          </span>
+          <span>Volver al menú inicial</span>
+        </button>
+      )}
+
+      <div className="setup-grid">
       <section className="card">
         <div>
           <h2 className="card-title">1. Registrar jugadores</h2>
@@ -527,5 +543,6 @@ export default function SetupView({
         )}
       </div>
     </div>
+  </div>
   );
 }

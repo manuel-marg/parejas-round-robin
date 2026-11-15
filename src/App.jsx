@@ -28,6 +28,8 @@ import SetupView from './components/SetupView.jsx';
 import MatchesView from './components/MatchesView.jsx';
 import StatsView from './components/StatsView.jsx';
 import HistoryView from './components/HistoryView.jsx';
+import WelcomeView from './components/WelcomeView.jsx';
+import SavedTournamentsView from './components/SavedTournamentsView.jsx';
 import { confirmNewTournament } from './utils/confirm.js';
 
 /**
@@ -42,6 +44,7 @@ export default function App() {
   const [statsTourTick, setStatsTourTick] = useState(0);
   const [historyTourTick, setHistoryTourTick] = useState(0);
   const [activeTab, setActiveTab] = useState('matches');
+  const [initialViewMode, setInitialViewMode] = useState('welcome');
 
   useEffect(() => {
     saveActiveTournament(tournament);
@@ -236,6 +239,7 @@ export default function App() {
     const confirmed = await confirmNewTournament();
     if (confirmed) {
       setTournament(null);
+      setInitialViewMode('welcome');
     }
   }
 
@@ -244,6 +248,7 @@ export default function App() {
     setTutorialState(nextState);
 
     if (!tournament) {
+      setInitialViewMode('setup');
       setSetupTourTick((t) => t + 1);
     } else if (activeTab === 'matches') {
       setMatchesTourTick((t) => t + 1);
@@ -308,14 +313,31 @@ export default function App() {
 
       <main className="main-container">
         {!tournament ? (
-          <SetupView
-            onStartTournament={handleStartTournament}
-            history={history}
-            onLoadHistory={handleLoadHistory}
-            autoStartTour={shouldAutoStartSetupTour(tutorialState)}
-            manualTourTick={setupTourTick}
-            onSetupTourComplete={() => setTutorialState(markSetupTourSeen())}
-          />
+          initialViewMode === 'setup' ? (
+            <SetupView
+              onStartTournament={handleStartTournament}
+              history={history}
+              onLoadHistory={handleLoadHistory}
+              onBackToWelcome={() => setInitialViewMode('welcome')}
+              autoStartTour={shouldAutoStartSetupTour(tutorialState)}
+              manualTourTick={setupTourTick}
+              onSetupTourComplete={() => setTutorialState(markSetupTourSeen())}
+            />
+          ) : initialViewMode === 'saved' ? (
+            <SavedTournamentsView
+              history={history}
+              onBackToWelcome={() => setInitialViewMode('welcome')}
+              onCreateTournament={() => setInitialViewMode('setup')}
+              onLoadHistory={handleLoadHistory}
+              onDeleteHistory={handleDeleteHistory}
+            />
+          ) : (
+            <WelcomeView
+              onCreateTournament={() => setInitialViewMode('setup')}
+              onOpenSaved={() => setInitialViewMode('saved')}
+              savedCount={history.length}
+            />
+          )
         ) : (
           <>
             <div className="tabs-bar">
@@ -396,7 +418,10 @@ export default function App() {
                 onClearFinal={handleClearFinal}
                 onGoToMatches={() => setActiveTab('matches')}
                 onResetScores={handleResetScores}
-                onNewTournament={() => setTournament(null)}
+                onNewTournament={() => {
+                  setTournament(null);
+                  setInitialViewMode('welcome');
+                }}
                 autoStartTour={shouldAutoStartStatsTour(tutorialState)}
                 manualTourTick={statsTourTick}
                 onStatsTourComplete={() => setTutorialState(markStatsTourSeen())}
@@ -411,7 +436,10 @@ export default function App() {
                 onLoadHistory={handleLoadHistory}
                 onDeleteHistory={handleDeleteHistory}
                 onResetScores={handleResetScores}
-                onNewTournament={() => setTournament(null)}
+                onNewTournament={() => {
+                  setTournament(null);
+                  setInitialViewMode('welcome');
+                }}
                 autoStartTour={shouldAutoStartHistoryTour(tutorialState)}
                 manualTourTick={historyTourTick}
                 onHistoryTourComplete={() => setTutorialState(markHistoryTourSeen())}
